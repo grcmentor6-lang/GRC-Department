@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   GRC Department — design tokens.
+
+   Taken from the source mockup by frequency, not invented: every value below
+   appears in `GRC Department.html`. This is a DIFFERENT surface from grcmentor
+   (web/), on a warmer paper ground with a violet accent, and it deliberately
+   does NOT inherit the fourteen forms in docs/FORM_LANGUAGE.md — a marketplace
+   has no gates, attempts or mentor decisions, so those silhouettes would carry
+   no meaning here. In particular the working sheet's folded corner, which means
+   "you may edit this", must never appear on this side.
+
+   Light-only, like grcmentor: the mockup commits to one look and paints every
+   ground explicitly.
+   ========================================================================== */
+
+:root {
+  /* Grounds — warm paper, not grey. */
+  --gd-paper: #faf9f5; /* page */
+  --gd-surface: #ffffff; /* card */
+  --gd-sunken: #f2f1ec; /* recessed fill, table stripe */
+  --gd-muted: #ecebe5; /* quieter block */
+
+  /* Rules. Three weights: hairline, visible, structural. */
+  --gd-line: #e3e1da;
+  --gd-line-strong: #d4d2ca;
+  --gd-rule: #c7c5be;
+
+  /* Ink — a five-step ramp, near-black navy through to faint. */
+  --gd-ink: #0b1020;
+  --gd-ink-2: #232a3e;
+  --gd-ink-3: #39424f;
+  --gd-ink-4: #5b6472;
+  --gd-ink-5: #666e7c;
+  --gd-faint: #a7afc0;
+
+  /* Accent — violet. Action, brand, the selected thing. */
+  --gd-accent: #432dd7;
+  --gd-accent-dark: #3624b0; /* hover / pressed */
+  --gd-accent-tint: #fbfbff; /* barely-there wash behind selection */
+
+  /* Positive — green. Accepted, approved, paid, verified. The ONLY hue that
+     may say "this is settled", which is why nothing decorative uses it. */
+  --gd-positive: #0c7350;
+  --gd-positive-tint: #e8f4ee;
+  --gd-positive-line: #c4e3d3;
+}
+
+@theme inline {
+  --color-paper: var(--gd-paper);
+  --color-surface: var(--gd-surface);
+  --color-sunken: var(--gd-sunken);
+  --color-muted: var(--gd-muted);
+
+  --color-line: var(--gd-line);
+  --color-line-strong: var(--gd-line-strong);
+  --color-rule: var(--gd-rule);
+
+  --color-ink: var(--gd-ink);
+  --color-ink-2: var(--gd-ink-2);
+  --color-ink-3: var(--gd-ink-3);
+  --color-ink-4: var(--gd-ink-4);
+  --color-ink-5: var(--gd-ink-5);
+  --color-faint: var(--gd-faint);
+
+  --color-accent: var(--gd-accent);
+  --color-accent-dark: var(--gd-accent-dark);
+  --color-accent-tint: var(--gd-accent-tint);
+
+  --color-positive: var(--gd-positive);
+  --color-positive-tint: var(--gd-positive-tint);
+  --color-positive-line: var(--gd-positive-line);
+
+  --font-sans: var(--font-jakarta);
+}
+
+html,
+body {
+  background: var(--gd-paper);
+  color: var(--gd-ink);
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Shared keyboard focus ring — outline follows border-radius and never shifts
+   layout, so it is safe on buttons, links and cards alike. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--gd-accent);
+    outline-offset: 2px;
+  }
+}
