@@ -10,11 +10,12 @@
 export function DemoNotice() {
   return (
     <div className="rounded-xl border border-line-strong bg-muted p-4">
-      <p className="text-sm font-semibold text-ink">Demonstration profiles</p>
+      <p className="text-sm font-semibold text-ink">Some profiles below are demonstrations</p>
       <p className="mt-1 text-sm leading-relaxed text-ink-4">
-        The consultants below are illustrative examples, not real people, and their engagement
-        histories are invented. They are here so the directory can be shown before the first
-        cohort is listed. Nobody on this page is available to hire.{" "}
+        Profiles marked <span className="font-semibold text-ink-2">Demonstration profile</span> are
+        illustrative examples, not real people, and their engagement histories are invented. Profiles
+        marked <span className="font-semibold text-positive">Listed from assessed work</span> are real
+        grcmentor.ai consultants whose figures come from graded work.{" "}
         <a
           href="/brief"
           className="focus-ring rounded font-medium text-accent underline underline-offset-2 hover:text-accent-dark"

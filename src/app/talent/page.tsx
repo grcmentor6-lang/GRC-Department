@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { DemoNotice } from "@/components/demo-notice";
+import { ProfileMark } from "@/components/profile-mark";
 import { TalentFilters } from "@/components/talent-filters";
 import { getDirectory, type ConsultantCard } from "@/lib/consultants";
 
@@ -47,7 +48,8 @@ export default async function TalentPage({ searchParams }: { searchParams: Promi
           consultant has completed programme assessment.
         </p>
 
-        {directory.is_demo_data && (
+        {/* Only when invented profiles are actually on screen; each is also marked on its card. */}
+        {directory.consultants.some((c) => c.is_seed) && (
           <div className="mt-8">
             <DemoNotice />
           </div>
@@ -127,7 +129,10 @@ function ConsultantRow({
         </span>
 
         <div className="min-w-0 flex-1">
-          <h2 className="font-bold leading-snug text-ink">{card.name}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-bold leading-snug text-ink">{card.name}</h2>
+            <ProfileMark isSeed={card.is_seed} />
+          </div>
           <p className="text-sm text-ink-4">{card.headline}</p>
           <p className="mt-1 text-xs text-ink-5">
             {card.location} · {card.window}
@@ -149,7 +154,7 @@ function ConsultantRow({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-5">
-            <span>{card.experience_years} years</span>
+            <span>{card.experience_years ? `${card.experience_years} years` : "New to client work"}</span>
             <span aria-hidden>·</span>
             <span>{card.availability}</span>
             {card.overlap_label && (

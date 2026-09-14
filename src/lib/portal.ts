@@ -101,13 +101,26 @@ export interface Project {
   asks: Ask[];
 }
 
+export interface PendingTimesheet {
+  id: string;
+  ref: string;
+  engagement: string;
+  consultant: string;
+  week_start: string;
+  minutes: number;
+  submitted_at: string | null;
+  auto_approves_at: string;
+}
+
 export interface Portal {
   projects: Project[];
+  timesheets: PendingTimesheet[];
   stats: {
     active: number;
     deliverables_outstanding: number;
     items_owed_by_you: number;
     requests_in_flight: number;
+    timesheets_to_approve: number;
   };
   requests: { id: string; kind: string; status: string; services: ServiceLine[]; created_at: string }[];
   activity: { who: string; what: string; at: string }[];
@@ -137,6 +150,15 @@ export async function acceptDeliverable(id: string): Promise<void> {
     headers: t ? { Authorization: `Bearer ${t}` } : {},
   });
   if (!res.ok) throw new Error("Could not accept this deliverable.");
+}
+
+export async function approveTimesheet(id: string): Promise<void> {
+  const t = getToken();
+  const res = await fetch(`${BASE_URL}/gd/client/timesheets/${id}/approve`, {
+    method: "POST",
+    headers: t ? { Authorization: `Bearer ${t}` } : {},
+  });
+  if (!res.ok) throw new Error("Could not approve this timesheet.");
 }
 
 /** "12 Jun 2026" — the format the whole product uses. */

@@ -29,6 +29,20 @@ export interface Competency {
   name: string;
   level: string;
   pct: string;
+  /** Real consultants only: which graded evidence the figure comes from. */
+  basis?: "rubric" | "judgment";
+}
+
+/** A real consultant's record, derived from graded grcmentor work. Null for a demo profile. */
+export interface Assessment {
+  programme: string | null;
+  verified_activities: number;
+  total_activities: number;
+  average_score: number | null;
+  judgment_calls: number;
+  programme_work: { org: string; industry: string | null; tasks: number }[];
+  standards: string[];
+  assessed_at: string | null;
 }
 
 export interface HistoryEntry {
@@ -47,6 +61,7 @@ export interface ConsultantProfile extends ConsultantCard {
   package_note: string | null;
   competencies: Competency[];
   history: HistoryEntry[];
+  assessment: Assessment | null;
 }
 
 export interface DirectoryFilters {
@@ -82,6 +97,15 @@ function qs(f: DirectoryFilters): string {
  */
 export function getDirectory(filters: DirectoryFilters = {}): Promise<Directory> {
   return apiGet<Directory>(`/gd/consultants${qs(filters)}`, { cache: "no-store" });
+}
+
+/**
+ * The home page's shortlist and "available for engagement" strip. Cached for five minutes rather
+ * than fetched per request, so the landing page stays fast and does not wake the backend for
+ * every visitor; a newly listed consultant appears within that window.
+ */
+export function getDirectoryPreview(): Promise<Directory> {
+  return apiGet<Directory>("/gd/consultants", { next: { revalidate: 300 } });
 }
 
 export function getConsultant(

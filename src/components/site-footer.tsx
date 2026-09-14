@@ -9,18 +9,24 @@ const COLUMNS = [
       { href: "/portal", label: "Client portal" },
       { href: "/services", label: "Service catalogue" },
       { href: "/talent", label: "Browse talent" },
+      { href: "/#engagement-models", label: "Engagement models" },
+      { href: "/#vetting", label: "Vetting process" },
     ],
   },
   {
     title: "Consultants",
     links: [
-      // Listing application and the consultant portal are not built; linking to them would
-      // 404. The programme is the real first step, so it is the only link here for now.
+      { href: "/consultants#apply", label: "Apply for listing" },
+      { href: "/consultants#requirements", label: "Listing requirements" },
+      { href: "/consultant-portal", label: "Consultant portal" },
       { href: "https://grcmentor.app", label: "grcmentor.ai programme" },
     ],
   },
 ];
 
+// ponytail: the mockup's footer also links Terms of engagement, Privacy notice and Sub-processors.
+// None of those documents exists, and a link to an empty legal page is worse than no link — add
+// them with the real text before taking a paying client.
 export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-surface">
@@ -37,9 +43,7 @@ export function SiteFooter() {
 
         {COLUMNS.map((col) => (
           <div key={col.title}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-3">
-              {col.title}
-            </h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-3">{col.title}</h2>
             <ul className="mt-3 space-y-2 text-sm text-ink-5">
               {col.links.map((l) => (
                 <li key={l.label}>

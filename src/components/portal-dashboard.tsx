@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   acceptDeliverable,
+  approveTimesheet,
   fmtDate,
   fmtMoney,
   type Contact,
@@ -89,6 +90,10 @@ export function PortalDashboard({
         ))}
       </dl>
 
+      {portal.timesheets.length > 0 && (
+        <TimesheetsToApprove timesheets={portal.timesheets} onRefresh={onRefresh} />
+      )}
+
       {portal.projects.length === 0 ? (
         <div className="mt-8 rounded-xl border border-line bg-surface p-8">
           <h2 className="font-bold text-ink">No engagements yet</h2>
@@ -149,6 +154,68 @@ export function PortalDashboard({
         </section>
       )}
     </div>
+  );
+}
+
+function TimesheetsToApprove({
+  timesheets,
+  onRefresh,
+}: {
+  timesheets: Portal["timesheets"];
+  onRefresh: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function approve(id: string) {
+    setBusy(id);
+    setError(null);
+    try {
+      await approveTimesheet(id);
+      await onRefresh();
+    } catch {
+      setError("Could not approve this timesheet. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <section className="mt-6 rounded-xl border border-accent bg-accent-tint p-5">
+      <h2 className="font-bold text-ink">Timesheets to approve</h2>
+      <p className="mt-1 text-xs text-ink-4">
+        Hours you approve become payable to the consultant. A week you do not review is approved
+        automatically at the date shown.
+      </p>
+      {error && (
+        <p role="alert" className="mt-3 rounded-lg bg-surface px-3 py-2 text-sm text-ink-2">
+          {error}
+        </p>
+      )}
+      <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-surface">
+        {timesheets.map((t) => (
+          <li key={t.id} className="flex flex-wrap items-center gap-3 p-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-ink">
+                {t.consultant} · week of {fmtDate(t.week_start)}
+              </p>
+              <p className="text-xs text-ink-5">
+                {t.ref} · {t.engagement} · auto-approves {fmtDate(t.auto_approves_at)}
+              </p>
+            </div>
+            <span className="text-sm font-semibold text-ink">{(t.minutes / 60).toFixed(1)} h</span>
+            <button
+              type="button"
+              disabled={busy === t.id}
+              onClick={() => approve(t.id)}
+              className="focus-ring rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
+            >
+              {busy === t.id ? "Approving…" : "Approve"}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
