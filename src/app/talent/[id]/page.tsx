@@ -52,7 +52,7 @@ export default async function ProfilePage({
                 {c.initials}
               </span>
               <div className="min-w-0">
-                <h1 className="text-2xl font-extrabold tracking-[-0.02em] text-ink">{c.name}</h1>
+                <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink">{c.name}</h1>
                 <p className="text-ink-4">{c.headline}</p>
                 <p className="mt-1 text-sm text-ink-5">
                   {c.location} · {c.window} · {c.availability}
@@ -77,7 +77,7 @@ export default async function ProfilePage({
                   ].map(([k, v]) => (
                     <div key={k}>
                       <dt className="text-xs text-ink-5">{k}</dt>
-                      <dd className="text-lg font-extrabold tracking-[-0.02em] text-ink">{v}</dd>
+                      <dd className="text-lg font-semibold tracking-[-0.02em] text-ink">{v}</dd>
                     </div>
                   ))}
                 </dl>

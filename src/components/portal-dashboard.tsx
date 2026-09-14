@@ -83,7 +83,7 @@ export function PortalDashboard({
             }`}
           >
             <dt className="text-xs text-ink-5">{label}</dt>
-            <dd className="mt-1 text-2xl font-extrabold tracking-[-0.02em] text-ink">
+            <dd className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">
               {String(value)}
             </dd>
           </div>

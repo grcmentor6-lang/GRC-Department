@@ -48,7 +48,7 @@ export default function ConsultantsPage() {
         <section className="border-b border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">For consultants</p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-[-0.03em] text-ink sm:text-5xl">
+            <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-5xl">
               Complete the programme. Practise on international engagements.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-4">
@@ -91,7 +91,7 @@ export default function ConsultantsPage() {
 
         <section className="border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <h2 className="text-3xl font-extrabold tracking-[-0.02em] text-ink">The listing route, stage by stage.</h2>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] text-ink">The listing route, stage by stage.</h2>
             <ol className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {STAGES.map((s) => (
                 <li key={s.n} className="border-t-2 border-ink pt-4">
@@ -106,7 +106,7 @@ export default function ConsultantsPage() {
 
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-[1fr_1.4fr]">
           <div id="requirements" className="scroll-mt-28">
-            <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-ink">Listing requirements</h2>
+            <h2 className="text-2xl font-semibold tracking-[-0.02em] text-ink">Listing requirements</h2>
             <ul className="mt-5 space-y-3">
               {REQUIREMENTS.map((r) => (
                 <li key={r} className="flex gap-3 text-sm leading-relaxed text-ink-3">

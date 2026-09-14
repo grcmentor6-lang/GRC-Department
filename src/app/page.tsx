@@ -116,7 +116,7 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 lg:grid-cols-[1.35fr_1fr] lg:items-center">
             <div>
               <Eyebrow>grcmentor.ai talent network</Eyebrow>
-              <h1 className="mt-4 max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-[-0.03em] text-ink sm:text-5xl">
+              <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-[-0.035em] text-ink sm:text-5xl">
                 Governance, risk and compliance specialists in your time zone — wherever you operate.
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-4">
@@ -223,7 +223,7 @@ export default async function HomePage() {
         <section className="border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <Eyebrow>Service catalogue</Eyebrow>
-            <h2 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-[-0.02em] text-ink">
+            <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.02em] text-ink">
               {service_count} services across {categories.length} categories, engaged singly or bundled.
             </h2>
             <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
@@ -253,7 +253,7 @@ export default async function HomePage() {
         {/* How it works */}
         <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-28 px-4 py-16">
           <Eyebrow>How it works</Eyebrow>
-          <h2 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-[-0.02em] text-ink">
+          <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.02em] text-ink">
             Select the work. Scope it. A consultant delivers it.
           </h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
@@ -277,7 +277,7 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <Eyebrow>Practice areas</Eyebrow>
-                <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.02em] text-ink">
+                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">
                   Engage against the control, not the job title.
                 </h2>
               </div>
@@ -318,7 +318,7 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <Eyebrow>Available for engagement</Eyebrow>
-                <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.02em] text-ink">
+                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">
                   Consultants accepting work this quarter.
                 </h2>
               </div>
@@ -367,7 +367,7 @@ export default async function HomePage() {
         <section id="engagement-models" className="scroll-mt-28 border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <Eyebrow>Engagement models</Eyebrow>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.02em] text-ink">
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">
               Three ways to take services from the catalogue.
             </h2>
             <div className="mt-10 grid gap-5 lg:grid-cols-3">
@@ -407,7 +407,7 @@ export default async function HomePage() {
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center">
           <div>
             <Eyebrow>Client portal</Eyebrow>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.02em] text-ink">
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">
               Your engagements, deliverables and consultants in one place.
             </h2>
             <p className="mt-4 leading-relaxed text-ink-4">
@@ -438,7 +438,7 @@ export default async function HomePage() {
         <section id="vetting" className="scroll-mt-28 border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <Eyebrow>Vetting</Eyebrow>
-            <h2 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-[-0.02em] text-ink">
+            <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.02em] text-ink">
               Listing is earned through assessed work, not a self-reported résumé.
             </h2>
             <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
@@ -460,7 +460,7 @@ export default async function HomePage() {
         {/* FAQ */}
         <section className="mx-auto max-w-3xl px-4 py-16">
           <Eyebrow>Frequently asked</Eyebrow>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.02em] text-ink">Common questions.</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">Common questions.</h2>
           <dl className="mt-8 divide-y divide-line border-y border-line">
             {FAQ.map((f) => (
               <div key={f.q} className="py-5">

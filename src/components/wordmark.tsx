@@ -4,7 +4,7 @@
  */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`font-extrabold tracking-[-0.04em] text-ink ${className}`}>
+    <span className={`font-semibold tracking-[-0.02em] text-ink ${className}`}>
       grc<span className="text-accent">department</span>
     </span>
   );

@@ -72,7 +72,8 @@
   --color-positive-tint: var(--gd-positive-tint);
   --color-positive-line: var(--gd-positive-line);
 
-  --font-sans: var(--font-jakarta);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 html,

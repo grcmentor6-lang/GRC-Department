@@ -53,7 +53,7 @@ export function CatalogueBrowser({ catalogue }: { catalogue: Catalogue }) {
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
         Service catalogue
       </p>
-      <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-[-0.02em] text-ink sm:text-4xl">
+      <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-[-0.02em] text-ink sm:text-4xl">
         Engage one service, or bundle several into a single statement of work.
       </h1>
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
@@ -222,7 +222,7 @@ function CategoryPanel({
         </span>
         <span className="text-xs text-ink-5">{category.services.length} services</span>
       </div>
-      <h2 className="mt-3 text-2xl font-extrabold tracking-[-0.02em] text-ink">{category.name}</h2>
+      <h2 className="mt-3 text-2xl font-semibold tracking-[-0.02em] text-ink">{category.name}</h2>
       <p className="mt-2 max-w-2xl leading-relaxed text-ink-4">{category.blurb}</p>
 
       <ResultList

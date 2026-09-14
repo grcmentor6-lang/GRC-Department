@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// The mockup's typeface. next/font self-hosts it, so there is no render-blocking
-// request to fonts.googleapis.com and no layout shift on first paint.
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// grcmentor's typefaces, exactly as web/src/app/layout.tsx loads them. GRC Department is the
+// same company's placement side, so it reads in the same type; the mockup's Plus Jakarta Sans made
+// the two sites look unrelated. next/font self-hosts both, so there is no render-blocking request.
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -20,8 +25,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body className={`${jakarta.variable} antialiased`}>{children}</body>
+    // The font variables go on <html>, not <body>: globals.css resolves --font-sans from them at the
+    // root, and a variable set only on <body> is undefined there — the page silently falls back to
+    // the system font (which is what the mockup's typeface had been doing all along).
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

@@ -30,7 +30,7 @@ export default async function ScopingPage({
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Scoping</p>
-        <h1 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-[-0.02em] text-ink sm:text-4xl">
+        <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-[-0.02em] text-ink sm:text-4xl">
           {codes.length > 1
             ? `Scope ${codes.length} services as one engagement`
             : "Scope this service"}

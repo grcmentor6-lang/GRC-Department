@@ -468,7 +468,7 @@ export function ConsultantDashboard({
             <div className="space-y-4">
               <div className="rounded-xl border border-line bg-surface p-5">
                 <p className="text-xs text-ink-5">Next payout</p>
-                <p className="mt-1 text-2xl font-extrabold tracking-[-0.02em] text-ink">
+                <p className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">
                   {fmtMoney(data.earnings.due, currency)}
                 </p>
                 <p className="text-sm text-ink-5">
@@ -624,7 +624,7 @@ function TimeTab({
           ].map(([k, v]) => (
             <div key={k} className="rounded-xl border border-line bg-surface p-4">
               <dt className="text-xs text-ink-5">{k}</dt>
-              <dd className="mt-1 text-xl font-extrabold tracking-[-0.02em] text-ink">{v}</dd>
+              <dd className="mt-1 text-xl font-semibold tracking-[-0.02em] text-ink">{v}</dd>
             </div>
           ))}
         </dl>
@@ -780,7 +780,7 @@ function Stats({ items }: { items: [string, string, string?][] }) {
       {items.map(([k, v, sub]) => (
         <div key={k} className="rounded-xl border border-line bg-surface p-4">
           <dt className="text-xs text-ink-5">{k}</dt>
-          <dd className="mt-1 text-2xl font-extrabold tracking-[-0.02em] text-ink">{v}</dd>
+          <dd className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">{v}</dd>
           {sub && <dd className="mt-0.5 text-xs text-ink-5">{sub}</dd>}
         </div>
       ))}

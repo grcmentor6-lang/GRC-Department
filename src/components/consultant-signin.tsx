@@ -41,7 +41,7 @@ export function ConsultantSignIn({ onSignedIn }: { onSignedIn: () => void }) {
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
           Consultant portal
         </p>
-        <h1 className="mt-3 max-w-2xl text-3xl font-extrabold tracking-[-0.02em] text-ink sm:text-4xl">
+        <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.02em] text-ink sm:text-4xl">
           Your engagements, tasks, tracked time and payouts.
         </h1>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
