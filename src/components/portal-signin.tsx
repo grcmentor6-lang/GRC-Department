@@ -95,16 +95,6 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
           </p>
         </div>
       </div>
-
-      <div className="mt-4 rounded-xl border border-line-strong bg-muted p-4">
-        <p className="text-sm font-semibold text-ink">Demonstration account</p>
-        <p className="mt-1 text-sm leading-relaxed text-ink-4">
-          <code className="rounded bg-surface px-1 py-0.5 text-xs">demo.client@grcmentor.app</code>{" "}
-          / <code className="rounded bg-surface px-1 py-0.5 text-xs">demo-client-2026</code> — an
-          invented organisation with three invented engagements, so the portal can be shown
-          before a real client is onboarded.
-        </p>
-      </div>
     </div>
   );
 }
