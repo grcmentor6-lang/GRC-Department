@@ -2,8 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { DemoNotice } from "@/components/demo-notice";
-import { ProfileMark } from "@/components/profile-mark";
 import { getConsultant } from "@/lib/consultants";
 import { getCatalogue } from "@/lib/catalogue";
 import { ApiError } from "@/lib/api";
@@ -39,11 +37,6 @@ export default async function ProfilePage({
           ← Back to directory
         </Link>
 
-        {c.is_seed && (
-          <div className="mt-6">
-            <DemoNotice />
-          </div>
-        )}
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
           <div>
@@ -58,7 +51,6 @@ export default async function ProfilePage({
                   {c.location} · {c.window} · {c.availability}
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <ProfileMark isSeed={c.is_seed} />
                   {c.cohort && <span className="text-xs text-ink-5">{c.cohort}</span>}
                 </div>
               </div>
@@ -98,12 +90,10 @@ export default async function ProfilePage({
             {c.competencies.length > 0 && (
               <section className="mt-10">
                 <h2 className="text-lg font-bold text-ink">Assessed competencies</h2>
-                {!c.is_seed && (
-                  <p className="mt-1 text-xs text-ink-5">
-                    Rubric scores from graded activities, and judgment scores from the decisions they
-                    defended.
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-ink-5">
+                  Rubric scores from graded activities, and judgment scores from the decisions they
+                  defended.
+                </p>
                 <ul className="mt-4 space-y-3">
                   {c.competencies.map((comp) => (
                     <li key={comp.name}>
@@ -201,7 +191,6 @@ export default async function ProfilePage({
                 {c.availability} · {c.notice_days === 0 ? "immediate" : `${c.notice_days} days`}{" "}
                 notice
               </p>
-              {c.package_note && <p className="mt-2 text-xs text-ink-5">{c.package_note}</p>}
 
               <Link
                 href="/brief"
@@ -216,7 +205,7 @@ export default async function ProfilePage({
                     "Overlap offered",
                     c.overlap_label
                       ? `${c.overlap_label} with ${region}`
-                      : c.overlap_note ?? "State your business hours to see this",
+                      : "State your business hours to see this",
                   ],
                   ["Working window", c.window],
                   ["Notice period", c.notice_days === 0 ? "Immediate" : `${c.notice_days} days`],

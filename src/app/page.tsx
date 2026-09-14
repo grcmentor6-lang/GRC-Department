@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { ProfileMark } from "@/components/profile-mark";
 import { getCatalogue } from "@/lib/catalogue";
 import { getDirectoryPreview, type ConsultantCard } from "@/lib/consultants";
 
@@ -145,7 +144,7 @@ export default async function HomePage() {
             {shortlist.length > 0 && (
               <div className="rounded-xl border border-line bg-paper p-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-5">Illustrative shortlist</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-5">Listed consultants</p>
                   <span className="text-xs text-ink-5">{shortlist.length} shown</span>
                 </div>
                 <ul className="mt-4 space-y-2">
@@ -164,7 +163,6 @@ export default async function HomePage() {
                             {m.headline} · {m.timezone}
                           </span>
                         </span>
-                        <ProfileMark isSeed={m.is_seed} />
                       </Link>
                     </li>
                   ))}
@@ -337,9 +335,6 @@ export default async function HomePage() {
                       <p className="font-bold text-ink">{p.name}</p>
                       <p className="text-sm text-ink-4">{p.headline}</p>
                     </div>
-                  </div>
-                  <div className="mt-3">
-                    <ProfileMark isSeed={p.is_seed} />
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {p.skills.slice(0, 3).map((s) => (

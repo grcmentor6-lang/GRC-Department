@@ -22,7 +22,6 @@ export interface ConsultantCard {
   /** Null unless the caller stated a region; the four-hour rule is only meaningful against one. */
   overlap_minutes: number | null;
   overlap_label: string | null;
-  is_seed: boolean;
 }
 
 export interface Competency {
@@ -33,7 +32,7 @@ export interface Competency {
   basis?: "rubric" | "judgment";
 }
 
-/** A real consultant's record, derived from graded grcmentor work. Null for a demo profile. */
+/** A consultant's record, derived from their graded grcmentor work. */
 export interface Assessment {
   programme: string | null;
   verified_activities: number;
@@ -57,11 +56,9 @@ export interface ConsultantProfile extends ConsultantCard {
   tools: string[];
   languages: string[];
   hours_per_week: number;
-  overlap_note: string | null;
-  package_note: string | null;
   competencies: Competency[];
   history: HistoryEntry[];
-  assessment: Assessment | null;
+  assessment: Assessment;
 }
 
 export interface DirectoryFilters {
@@ -74,8 +71,6 @@ export interface DirectoryFilters {
 
 export interface Directory {
   consultants: ConsultantCard[];
-  /** True when the listed profiles are fabricated demonstrations. The UI must say so. */
-  is_demo_data: boolean;
   regions: string[];
   practice_areas: PracticeArea[];
 }
@@ -111,7 +106,7 @@ export function getDirectoryPreview(): Promise<Directory> {
 export function getConsultant(
   id: string,
   region?: string,
-): Promise<{ consultant: ConsultantProfile; is_demo_data: boolean }> {
+): Promise<{ consultant: ConsultantProfile }> {
   const r = region ? `?region=${encodeURIComponent(region)}` : "";
   return apiGet(`/gd/consultants/${id}${r}`, { cache: "no-store" });
 }

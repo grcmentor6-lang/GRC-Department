@@ -8,7 +8,7 @@ import { apiGet, apiPost, BASE_URL } from "./api";
  * The token lives in `sessionStorage`, so it dies with the tab.
  * ponytail: this is weaker than the learner app, which keeps the access token in memory and
  * refreshes it from an httpOnly cookie (web/src/lib/token.ts) — a token in web storage is
- * readable by any injected script. Acceptable while the portal is behind a demo login and the
+ * readable by any injected script. Acceptable while the portal has few users and the
  * token is short-lived; the upgrade is to add the refresh-cookie endpoints for CLIENT_SCOPE and
  * copy web/'s client wholesale, which is also what removes the re-login on reload.
  */
@@ -95,7 +95,7 @@ export interface Project {
   billing_period: string | null;
   quoted_total: string;
   services: ServiceLine[];
-  consultant: { id: string; name: string; initials: string; window: string; is_seed: boolean } | null;
+  consultant: { id: string; name: string; initials: string; window: string } | null;
   milestones: Milestone[];
   deliverables: DeliverableItem[];
   asks: Ask[];
