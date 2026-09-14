@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PortalShell, type ShellNavItem } from "@/components/portal-shell";
 import {
   acceptDeliverable,
   approveTimesheet,
@@ -18,131 +20,230 @@ const STAGE_TONE: Record<string, string> = {
   Scoping: "border-line-strong bg-muted text-ink-3",
 };
 
+export type ClientView = "overview" | "engagements" | "timesheets" | "activity";
+export const CLIENT_VIEWS: ClientView[] = ["overview", "engagements", "timesheets", "activity"];
+
+const BASE = "/portal/dashboard";
+const TITLES: Record<ClientView, string> = {
+  overview: "Overview",
+  engagements: "Engagements",
+  timesheets: "Timesheets",
+  activity: "Activity",
+};
+
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase() || "?";
+
 export function PortalDashboard({
   contact,
   portal,
+  view,
   onRefresh,
   onSignOut,
 }: {
   contact: Contact;
   portal: Portal;
+  view: ClientView;
   onRefresh: () => Promise<void>;
   onSignOut: () => void;
 }) {
+  const router = useRouter();
+  const go = (v: ClientView, project?: string) =>
+    router.push(v === "overview" ? BASE : `${BASE}?view=${v}${project ? `&engagement=${project}` : ""}`);
+
   const [openId, setOpenId] = useState<string | null>(
-    portal.projects.find((p) => p.stage !== "Closed")?.id ?? portal.projects[0]?.id ?? null,
+    () =>
+      (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("engagement")) ||
+      portal.projects.find((p) => p.stage !== "Closed")?.id ||
+      portal.projects[0]?.id ||
+      null,
   );
   const open = portal.projects.find((p) => p.id === openId) ?? null;
 
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-4 border-b border-line pb-6">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">
-          {contact.name
-            .split(" ")
-            .slice(0, 2)
-            .map((p) => p[0])
-            .join("")}
-        </span>
-        <div className="min-w-0">
-          <h1 className="font-bold text-ink">{contact.org?.name ?? "Client portal"}</h1>
-          <p className="text-sm text-ink-5">
-            {contact.name}
-            {contact.job_title && ` · ${contact.job_title}`}
-            {contact.org && ` · ${contact.org.business_region} business hours`}
-          </p>
-        </div>
-        <div className="ml-auto flex gap-2">
-          <Link
-            href="/services"
-            className="focus-ring rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
-          >
-            Request a service
-          </Link>
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken"
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
+  const nav: ShellNavItem[] = [
+    { key: "overview", label: "Overview", icon: "overview" },
+    { key: "engagements", label: "Engagements", icon: "briefcase", badge: portal.stats.deliverables_outstanding },
+    { key: "timesheets", label: "Timesheets", icon: "timesheet", badge: portal.stats.timesheets_to_approve },
+    { key: "activity", label: "Activity", icon: "activity" },
+  ];
 
-      <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ["Active engagements", portal.stats.active, false],
-          ["Deliverables to review", portal.stats.deliverables_outstanding, portal.stats.deliverables_outstanding > 0],
-          ["Items owed by your teams", portal.stats.items_owed_by_you, portal.stats.items_owed_by_you > 0],
-          ["Requests in flight", portal.stats.requests_in_flight, false],
-        ].map(([label, value, urgent]) => (
-          <div
-            key={String(label)}
-            className={`rounded-xl border p-4 ${
-              urgent ? "border-accent bg-accent-tint" : "border-line bg-surface"
-            }`}
-          >
-            <dt className="text-xs text-ink-5">{label}</dt>
-            <dd className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">
-              {String(value)}
-            </dd>
+  const stats: [string, number, boolean][] = [
+    ["Active engagements", portal.stats.active, false],
+    ["Deliverables to review", portal.stats.deliverables_outstanding, portal.stats.deliverables_outstanding > 0],
+    ["Items owed by your teams", portal.stats.items_owed_by_you, portal.stats.items_owed_by_you > 0],
+    ["Timesheets to approve", portal.stats.timesheets_to_approve, portal.stats.timesheets_to_approve > 0],
+  ];
+
+  const noEngagements = (
+    <div className="rounded-xl border border-line bg-surface p-8">
+      <h2 className="font-semibold text-ink">No engagements yet</h2>
+      <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-4">
+        Once a proposal is accepted it appears here with its milestones, deliverables and the consultant
+        assigned.
+      </p>
+      <Link
+        href="/services"
+        className="focus-ring mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
+      >
+        Browse the service catalogue
+      </Link>
+    </div>
+  );
+
+  return (
+    <PortalShell
+      portal="Client portal"
+      basePath={BASE}
+      nav={nav}
+      active={view}
+      title={TITLES[view]}
+      subtitle={[contact.org?.name, contact.org && `${contact.org.business_region} business hours`].filter(Boolean).join(" · ")}
+      user={{ name: contact.name, initials: initials(contact.name), detail: contact.job_title ?? contact.email }}
+      onSignOut={onSignOut}
+      actions={
+        <Link
+          href="/services"
+          className="focus-ring rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
+        >
+          Request a service
+        </Link>
+      }
+    >
+      {view === "overview" && (
+        <div className="space-y-6">
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map(([label, value, urgent]) => (
+              <div key={label} className={`rounded-xl border p-4 ${urgent ? "border-accent bg-accent-tint" : "border-line bg-surface"}`}>
+                <dt className="text-xs text-ink-5">{label}</dt>
+                <dd className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {portal.timesheets.length > 0 && <TimesheetsToApprove timesheets={portal.timesheets} onRefresh={onRefresh} />}
+
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+            <section className="rounded-xl border border-line bg-surface p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-ink">Your engagements</h2>
+                {portal.projects.length > 0 && (
+                  <button type="button" onClick={() => go("engagements")} className="focus-ring rounded text-sm font-semibold text-accent hover:text-accent-dark">
+                    All engagements →
+                  </button>
+                )}
+              </div>
+              {portal.projects.length === 0 ? (
+                <p className="mt-3 text-sm leading-relaxed text-ink-5">
+                  Nothing in delivery yet. Accepted proposals appear here.
+                </p>
+              ) : (
+                <ul className="mt-3 divide-y divide-line">
+                  {portal.projects.map((p) => (
+                    <li key={p.id}>
+                      <button type="button" onClick={() => go("engagements", p.id)} className="focus-ring w-full py-3 text-left">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-xs text-ink-5">{p.ref}</span>
+                          <span className={`rounded border px-1.5 py-0.5 text-[11px] font-medium ${STAGE_TONE[p.stage] ?? "border-line bg-sunken text-ink-5"}`}>
+                            {p.stage}
+                          </span>
+                          <span className="ml-auto text-xs text-ink-5">{fmtMoney(p.quoted_total, p.currency)}</span>
+                        </div>
+                        <p className="mt-1 font-medium text-ink">{p.name}</p>
+                        <ProgressBar value={p.progress} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="rounded-xl border border-line bg-surface p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="font-semibold text-ink">Recent activity</h2>
+                {portal.activity.length > 5 && (
+                  <button type="button" onClick={() => go("activity")} className="focus-ring rounded text-sm font-semibold text-accent hover:text-accent-dark">
+                    All →
+                  </button>
+                )}
+              </div>
+              {portal.activity.length === 0 ? (
+                <p className="mt-3 text-sm text-ink-5">No activity yet.</p>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {portal.activity.slice(0, 5).map((a, i) => (
+                    <li key={i} className="text-sm">
+                      <span className="font-medium text-ink">{a.who}</span> <span className="text-ink-4">{a.what}</span>
+                      <p className="text-xs text-ink-5">{fmtDate(a.at)}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </div>
+      )}
+
+      {view === "engagements" &&
+        (portal.projects.length === 0 ? (
+          noEngagements
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+            <nav className="space-y-2" aria-label="Engagements">
+              {portal.projects.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setOpenId(p.id)}
+                  className={`focus-ring w-full rounded-xl border p-4 text-left transition-colors ${
+                    p.id === openId ? "border-accent bg-accent-tint" : "border-line bg-surface hover:border-line-strong"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-ink-5">{p.ref}</span>
+                    <span className={`rounded border px-1.5 py-0.5 text-[11px] font-medium ${STAGE_TONE[p.stage] ?? "border-line bg-sunken text-ink-5"}`}>
+                      {p.stage}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-semibold leading-snug text-ink">{p.name}</p>
+                  <ProgressBar value={p.progress} />
+                  <p className="mt-1 text-xs text-ink-5">
+                    {p.milestones_complete}/{p.milestones_total} milestones · {fmtMoney(p.quoted_total, p.currency)}
+                  </p>
+                </button>
+              ))}
+            </nav>
+            {open && <ProjectDetail project={open} onRefresh={onRefresh} />}
           </div>
         ))}
-      </dl>
 
-      {portal.timesheets.length > 0 && (
-        <TimesheetsToApprove timesheets={portal.timesheets} onRefresh={onRefresh} />
-      )}
+      {view === "timesheets" &&
+        (portal.timesheets.length > 0 ? (
+          <TimesheetsToApprove timesheets={portal.timesheets} onRefresh={onRefresh} />
+        ) : (
+          <div className="rounded-xl border border-line bg-surface p-8">
+            <h2 className="font-semibold text-ink">Nothing to approve</h2>
+            <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-4">
+              When a consultant submits a week of time on one of your engagements it appears here. Hours you
+              approve become payable; a week you do not review within five business days is approved
+              automatically.
+            </p>
+          </div>
+        ))}
 
-      {portal.projects.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-line bg-surface p-8">
-          <h2 className="font-bold text-ink">No engagements yet</h2>
-          <p className="mt-2 text-sm text-ink-4">
-            Once a proposal is accepted it appears here with its milestones and deliverables.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
-          <nav className="space-y-2">
-            {portal.projects.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setOpenId(p.id)}
-                className={`focus-ring w-full rounded-xl border p-4 text-left transition-colors ${
-                  p.id === openId
-                    ? "border-accent bg-accent-tint"
-                    : "border-line bg-surface hover:border-line-strong"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-ink-5">{p.ref}</span>
-                  <span
-                    className={`rounded border px-1.5 py-0.5 text-[11px] font-medium ${
-                      STAGE_TONE[p.stage] ?? "border-line bg-sunken text-ink-5"
-                    }`}
-                  >
-                    {p.stage}
-                  </span>
-                </div>
-                <p className="mt-1.5 font-semibold leading-snug text-ink">{p.name}</p>
-                <ProgressBar value={p.progress} />
-                <p className="mt-1 text-xs text-ink-5">
-                  {p.milestones_complete}/{p.milestones_total} milestones ·{" "}
-                  {fmtMoney(p.quoted_total, p.currency)}
-                </p>
-              </button>
-            ))}
-          </nav>
-
-          {open && <ProjectDetail project={open} onRefresh={onRefresh} />}
-        </div>
-      )}
-
-      {portal.activity.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink">Recent activity</h2>
-          <ul className="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+      {view === "activity" &&
+        (portal.activity.length === 0 ? (
+          <div className="rounded-xl border border-line bg-surface p-8">
+            <h2 className="font-semibold text-ink">No activity yet</h2>
+            <p className="mt-2 text-sm text-ink-4">Deliverables, approvals and submissions on your engagements are logged here.</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
             {portal.activity.map((a, i) => (
               <li key={i} className="flex flex-wrap items-baseline gap-x-2 p-4 text-sm">
                 <span className="font-semibold text-ink">{a.who}</span>
@@ -151,9 +252,8 @@ export function PortalDashboard({
               </li>
             ))}
           </ul>
-        </section>
-      )}
-    </div>
+        ))}
+    </PortalShell>
   );
 }
 
@@ -181,7 +281,7 @@ function TimesheetsToApprove({
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-accent bg-accent-tint p-5">
+    <section className="rounded-xl border border-accent bg-accent-tint p-5">
       <h2 className="font-bold text-ink">Timesheets to approve</h2>
       <p className="mt-1 text-xs text-ink-4">
         Hours you approve become payable to the consultant. A week you do not review is approved

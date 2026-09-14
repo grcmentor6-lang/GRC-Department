@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api";
+import { PortalShell, type ShellNavItem } from "@/components/portal-shell";
 import { fmtDate, fmtMoney } from "@/lib/portal";
 import {
   advanceTask,
@@ -18,32 +20,41 @@ import {
   type RunningTimer,
 } from "@/lib/consultant-portal";
 
-type Tab = "projects" | "tasks" | "time" | "earnings";
+export type ConsultantView = "overview" | "projects" | "tasks" | "time" | "earnings";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "projects", label: "Projects" },
-  { id: "tasks", label: "Tasks" },
-  { id: "time", label: "Time tracking" },
-  { id: "earnings", label: "Earnings" },
-];
+const BASE = "/consultant-portal/dashboard";
+
+export const CONSULTANT_VIEWS: ConsultantView[] = ["overview", "projects", "tasks", "time", "earnings"];
+
+const TITLES: Record<ConsultantView, string> = {
+  overview: "Overview",
+  projects: "Projects",
+  tasks: "Tasks",
+  time: "Time tracking",
+  earnings: "Earnings",
+};
 
 const FILTERS = ["All", "In progress", "Blocked", "In review", "Not started"];
 const MAX_ENTRY = 12 * 60;
 
 export function ConsultantDashboard({
   data,
+  view,
   week,
   onWeek,
   reload,
   onSignOut,
 }: {
   data: ConsultantPortal;
+  view: ConsultantView;
   week: string | undefined;
   onWeek: (w: string | undefined) => void;
   reload: () => Promise<void>;
   onSignOut: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>("projects");
+  const router = useRouter();
+  const tab = view;
+  const setTab = (t: ConsultantView) => router.push(t === "overview" ? BASE : `${BASE}?view=${t}`);
   const [projectId, setProjectId] = useState<string | null>(
     data.projects.find((p) => p.stage !== "Closed")?.id ?? data.projects[0]?.id ?? null,
   );
@@ -67,6 +78,13 @@ export function ConsultantDashboard({
   const runTask = timer ? taskById.get(timer.taskId) : undefined;
   const project = data.projects.find((p) => p.id === projectId) ?? null;
   const currency = data.earnings.currency;
+  const nav: ShellNavItem[] = [
+    { key: "overview", label: "Overview", icon: "overview" },
+    { key: "projects", label: "Projects", icon: "briefcase" },
+    { key: "tasks", label: "Tasks", icon: "tasks", badge: data.stats.open_tasks },
+    { key: "time", label: "Time tracking", icon: "clock" },
+    { key: "earnings", label: "Earnings", icon: "wallet" },
+  ];
 
   async function act(key: string, fn: () => Promise<unknown>, ok?: string) {
     setBusy(key);
@@ -120,56 +138,29 @@ export function ConsultantDashboard({
   }
 
   return (
-    <div>
-      {/* Identity bar */}
-      <div className="flex flex-wrap items-center gap-4 border-b border-line pb-6">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">
-          {c.initials}
-        </span>
-        <div className="min-w-0">
-          <h1 className="font-bold text-ink">{c.name}</h1>
-          <p className="text-sm text-ink-5">
-            {c.is_listed ? "Listed consultant" : "Listing paused"} · {c.window}
-          </p>
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          {timer && (
-            <button
-              type="button"
-              onClick={stopTimer}
-              disabled={busy === "timer"}
-              className="focus-ring flex items-center gap-2 rounded-lg border border-accent bg-accent-tint px-3 py-2 text-sm font-semibold text-accent"
-            >
-              <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-              <span className="font-mono">{clock(runSecs)}</span> · stop
-            </button>
-          )}
+    <PortalShell
+      portal="Consultant portal"
+      basePath={BASE}
+      nav={nav}
+      active={tab}
+      title={TITLES[tab]}
+      subtitle={`${c.is_listed ? "Listed consultant" : "Listing paused"} · ${c.window}`}
+      user={{ name: c.name, initials: c.initials, detail: c.headline }}
+      onSignOut={onSignOut}
+      actions={
+        timer ? (
           <button
             type="button"
-            onClick={onSignOut}
-            className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken"
+            onClick={stopTimer}
+            disabled={busy === "timer"}
+            className="focus-ring flex items-center gap-2 rounded-lg border border-accent bg-accent-tint px-3 py-2 text-sm font-semibold text-accent"
           >
-            Sign out
+            <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-accent" />
+            <span className="font-mono">{clock(runSecs)}</span> · stop
           </button>
-        </div>
-      </div>
-
-      <nav className="mt-5 flex flex-wrap gap-1 border-b border-line" aria-label="Portal sections">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={`focus-ring -mb-px rounded-t-lg border-b-2 px-4 py-2.5 text-sm font-semibold ${
-              tab === t.id ? "border-accent text-accent" : "border-transparent text-ink-5 hover:text-ink"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
+        ) : null
+      }
+    >
       {message && (
         <p
           role={message.tone === "err" ? "alert" : "status"}
@@ -188,8 +179,118 @@ export function ConsultantDashboard({
         </p>
       )}
 
+      {tab === "overview" && (
+        <section className="mt-2">
+          <Stats
+            items={[
+              ["Active engagements", String(data.stats.active_engagements)],
+              ["Open tasks", String(data.stats.open_tasks), data.stats.blocked_tasks ? `${data.stats.blocked_tasks} blocked on client` : undefined],
+              ["Hours this week", hours(data.stats.week_minutes)],
+              ["Awaiting approval", hours(data.stats.pending_minutes)],
+            ]}
+          />
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+            <div className="min-w-0 space-y-6">
+              <Panel
+                title="Your engagements"
+                action={
+                  data.projects.length ? (
+                    <button type="button" onClick={() => setTab("projects")} className="focus-ring rounded text-sm font-semibold text-accent hover:text-accent-dark">
+                      All projects →
+                    </button>
+                  ) : null
+                }
+              >
+                {data.projects.length === 0 ? (
+                  <p className="text-sm leading-relaxed text-ink-5">
+                    Nothing assigned yet. When a GRC lead places you on a client engagement it appears here
+                    with its milestones, and your tasks, timesheet and earnings fill in around it.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {data.projects.map((p) => (
+                      <li key={p.id} className="py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-xs text-ink-5">{p.ref}</span>
+                          <Chip status={p.stage} />
+                          <span className="ml-auto text-xs text-ink-5">{p.open_tasks} open tasks</span>
+                        </div>
+                        <p className="mt-1 font-medium text-ink">{p.name}</p>
+                        <p className="text-xs text-ink-5">{p.client}</p>
+                        <Bar value={p.progress} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Panel>
+
+              <Panel title="Recent approvals">
+                {data.approvals.length === 0 ? (
+                  <p className="text-sm text-ink-5">No weeks submitted yet.</p>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {data.approvals.slice(0, 4).map((a) => (
+                      <li key={`${a.week_start}-${a.ref}`} className="flex flex-wrap items-center gap-3 py-2.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-ink">Week of {fmtDate(a.week_start)} · {a.ref}</p>
+                          <p className="text-xs text-ink-5">{a.detail}</p>
+                        </div>
+                        <Chip status={label(a.status)} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Panel>
+            </div>
+
+            <div className="space-y-4">
+              <div className="rounded-xl border border-line bg-surface p-5">
+                {timer ? (
+                  <>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-accent">Timer running</p>
+                    <p className="mt-1 font-medium text-ink">{runTask?.name ?? "A task"}</p>
+                    <p className="mt-2 font-mono text-3xl font-semibold text-ink">{clock(runSecs)}</p>
+                    <button type="button" onClick={stopTimer} className="focus-ring mt-3 rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark">
+                      Stop and log
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-medium text-ink">No timer running</p>
+                    <p className="mt-1 text-sm text-ink-5">Start one against a task you are working on.</p>
+                    <button type="button" onClick={() => setTab("tasks")} className="focus-ring mt-3 rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sunken">
+                      Go to tasks
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-line bg-surface p-5">
+                <p className="text-xs text-ink-5">Earned to date</p>
+                <p className="mt-1 text-2xl font-semibold tracking-[-0.02em] text-ink">{fmtMoney(data.earnings.earned, currency)}</p>
+                <dl className="mt-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between"><dt className="text-ink-5">Paid out</dt><dd className="font-medium text-ink-2">{fmtMoney(data.earnings.paid, currency)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-ink-5">Due {fmtDate(nextFirst(data.today))}</dt><dd className="font-medium text-ink-2">{fmtMoney(data.earnings.due, currency)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-ink-5">Pending approval</dt><dd className="font-medium text-ink-2">{fmtMoney(data.earnings.pending_value, currency)}</dd></div>
+                </dl>
+              </div>
+
+              <div className="rounded-xl border border-line bg-surface p-5">
+                <p className="text-xs text-ink-5">Your listing</p>
+                <p className="mt-1 text-sm font-medium text-ink">{c.headline}</p>
+                <p className="mt-1 text-xs text-ink-5">{c.window}</p>
+                <a href={`/talent/${c.id}`} className="focus-ring mt-3 inline-block rounded text-sm font-semibold text-accent hover:text-accent-dark">
+                  View your public profile →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {tab === "projects" && (
-        <section className="mt-6">
+        <section className="mt-2">
           <Stats
             items={[
               ["Active engagements", String(data.stats.active_engagements)],
@@ -290,7 +391,7 @@ export function ConsultantDashboard({
       )}
 
       {tab === "tasks" && (
-        <section className="mt-6">
+        <section className="mt-2">
           <p className="max-w-3xl text-sm leading-relaxed text-ink-4">
             Every activity assigned to you across engagements. Start the timer on the task you are
             working on — elapsed time is logged against that activity and appears on the week&apos;s
@@ -388,7 +489,7 @@ export function ConsultantDashboard({
       )}
 
       {tab === "earnings" && (
-        <section className="mt-6">
+        <section className="mt-2">
           <p className="max-w-3xl text-sm leading-relaxed text-ink-4">
             Earnings are calculated from approved hours at the rate agreed on each engagement.
             Payouts are issued on the first business day of each month for everything approved in
@@ -404,7 +505,7 @@ export function ConsultantDashboard({
           />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
               <Panel title="By engagement" note="Approved hours at the rate agreed on each engagement.">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[520px] text-sm">
@@ -499,7 +600,7 @@ export function ConsultantDashboard({
           </div>
         </section>
       )}
-    </div>
+    </PortalShell>
   );
 }
 
