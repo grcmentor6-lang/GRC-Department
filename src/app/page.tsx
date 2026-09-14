@@ -127,7 +127,9 @@ export default async function HomePage() {
               eyebrow: "For consultants",
               title: "Complete the programme, then practise on international engagements.",
               body: "grcmentor.ai graduates apply for listing, set their own availability and working window, and are introduced to clients whose control environment matches their assessed competencies.",
-              cta: { href: "/consultants", label: "Apply for listing" },
+              // There is no listing application yet, so this points at the one step that is real:
+              // the programme every consultant has to complete first.
+              cta: { href: "https://grcmentor.app", label: "Start on grcmentor.ai" },
             },
           ].map((card) => (
             <div

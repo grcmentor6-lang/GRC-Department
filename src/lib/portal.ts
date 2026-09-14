@@ -1,6 +1,6 @@
 "use client";
 
-import { apiGet, apiPost } from "./api";
+import { apiGet, apiPost, BASE_URL } from "./api";
 
 /**
  * Client-portal session and reads.
@@ -129,10 +129,13 @@ export const getPortal = () =>
 
 export async function acceptDeliverable(id: string): Promise<void> {
   const t = getToken();
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}/gd/client/deliverables/${id}/accept`,
-    { method: "POST", headers: t ? { Authorization: `Bearer ${t}` } : {} },
-  );
+  // BASE_URL, not the raw env var: api.ts strips a trailing slash, and "https://x.onrender.com/"
+  // typed into a hosting dashboard would otherwise make this one call hit "//gd/..." and 404
+  // while every other request kept working.
+  const res = await fetch(`${BASE_URL}/gd/client/deliverables/${id}/accept`, {
+    method: "POST",
+    headers: t ? { Authorization: `Bearer ${t}` } : {},
+  });
   if (!res.ok) throw new Error("Could not accept this deliverable.");
 }
 

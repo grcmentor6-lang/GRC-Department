@@ -14,9 +14,8 @@ const COLUMNS = [
   {
     title: "Consultants",
     links: [
-      { href: "/consultants", label: "Apply for listing" },
-      { href: "/consultants#requirements", label: "Listing requirements" },
-      { href: "/consultant-portal", label: "Consultant portal" },
+      // Listing application and the consultant portal are not built; linking to them would
+      // 404. The programme is the real first step, so it is the only link here for now.
       { href: "https://grcmentor.app", label: "grcmentor.ai programme" },
     ],
   },

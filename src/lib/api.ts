@@ -7,7 +7,7 @@
  * copy web/'s client rather than growing this one; it is already battle-tested.
  */
 
-const BASE_URL =
+export const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
 export class ApiError extends Error {
