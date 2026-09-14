@@ -21,9 +21,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Every request gives up after this long. The backend runs on a free tier that can hang while it
+ * cold-starts or crash-loops; without a limit a server-rendered page waits until Vercel kills the
+ * function and shows its own error page, and a build-time fetch stalls static generation until the
+ * whole deploy fails. A timeout turns both into an ordinary error the page can handle.
+ */
+const TIMEOUT_MS = 25_000;
+
 export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
+    signal: init?.signal ?? AbortSignal.timeout(TIMEOUT_MS),
     headers: { Accept: "application/json", ...(init?.headers ?? {}) },
   });
   if (!res.ok) throw new ApiError(res.status, `GET ${path} failed`, await safeBody(res));
@@ -33,6 +42,7 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(body),
   });

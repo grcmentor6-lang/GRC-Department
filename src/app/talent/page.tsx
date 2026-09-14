@@ -23,13 +23,19 @@ export default async function TalentPage({ searchParams }: { searchParams: Promi
   const sp = await searchParams;
   const region = typeof sp.region === "string" ? sp.region : undefined;
 
-  const directory = await getDirectory({
-    practiceArea: asArray(sp.practice_area),
-    availability: typeof sp.availability === "string" ? sp.availability : undefined,
-    minExperience: Number(sp.min_experience ?? 0) || undefined,
-    region,
-    q: typeof sp.q === "string" ? sp.q : undefined,
-  });
+  let directory;
+  try {
+    directory = await getDirectory({
+      practiceArea: asArray(sp.practice_area),
+      availability: typeof sp.availability === "string" ? sp.availability : undefined,
+      minExperience: Number(sp.min_experience ?? 0) || undefined,
+      region,
+      q: typeof sp.q === "string" ? sp.q : undefined,
+    });
+  } catch {
+    // Backend unreachable (cold start, outage). A page that says so beats the host's error screen.
+    return <Unavailable />;
+  }
 
   const areaName = new Map(directory.practice_areas.map((a) => [a.code, a.name]));
 
@@ -76,6 +82,38 @@ export default async function TalentPage({ searchParams }: { searchParams: Promi
                 ))}
               </ul>
             )}
+          </div>
+        </div>
+      </main>
+      <SiteFooter />
+    </>
+  );
+}
+
+function Unavailable() {
+  return (
+    <>
+      <SiteHeader />
+      <main className="mx-auto max-w-6xl px-4 py-16">
+        <div className="max-w-xl rounded-xl border border-line bg-surface p-8">
+          <h1 className="text-xl font-semibold text-ink">The directory is temporarily unavailable</h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-4">
+            We could not reach the consultant directory just now. It usually comes back within a
+            minute — try again shortly, or submit a brief and a GRC lead will reply with a shortlist.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link
+              href="/talent"
+              className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sunken"
+            >
+              Try again
+            </Link>
+            <Link
+              href="/brief"
+              className="focus-ring rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark"
+            >
+              Submit a brief
+            </Link>
           </div>
         </div>
       </main>
