@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getCatalogue } from "@/lib/catalogue";
 import { getDirectoryPreview, type ConsultantCard } from "@/lib/consultants";
+import { CONSULTANTS_ENABLED } from "@/lib/flags";
 
 const FRAMEWORKS = [
   "SOC 2",
@@ -32,8 +33,8 @@ const STEPS = [
   },
   {
     n: "03",
-    title: "Receive a proposal and a consultant",
-    body: "A GRC lead confirms the deliverable, duration and acceptance criteria, and names the vetted consultant assigned — with the working overlap they will hold.",
+    title: "Receive a written proposal",
+    body: "A GRC lead confirms the deliverable, duration, price and acceptance criteria, and who will deliver the work — within one business day.",
   },
   {
     n: "04",
@@ -71,22 +72,34 @@ const VETTING = [
 ];
 
 const FAQ = [
+  ...(CONSULTANTS_ENABLED
+    ? [
+        {
+          q: "Are consultants employees of GRC Department?",
+          a: "No. Consultants are independent practitioners engaged through GRC Department, which administers the contract, confidentiality terms and payment.",
+        },
+      ]
+    : []),
   {
-    q: "Are consultants employees of GRC Department?",
-    a: "No. Consultants are independent practitioners engaged through GRC Department, which administers the contract, confidentiality terms and payment.",
+    q: "How do you work across time zones?",
+    a: "Tell us your business hours when you scope the work. Every engagement is staffed to give you at least four hours of working overlap with them each day.",
   },
   {
-    q: "How is time zone overlap guaranteed?",
-    a: "Each profile declares a working window. Shortlists exclude consultants who cannot provide at least four hours of overlap with your stated business hours.",
+    q: "Can you sign our audit opinion?",
+    a: "No. We prepare organisations for assessment and support the audit; the opinion remains the responsibility of your licensed audit firm.",
   },
   {
-    q: "Can a consultant sign our audit opinion?",
-    a: "No. Consultants prepare organisations for assessment and support the audit; the opinion remains the responsibility of your licensed audit firm.",
+    q: "What does it cost?",
+    a: "Each catalogue service is priced in the written proposal you receive after scoping, before any work starts. Briefs and scoping requests are free and carry no obligation.",
   },
-  {
-    q: "How does this relate to grcmentor.ai?",
-    a: "grcmentor.ai trains and assesses practitioners. GRC Department is where those practitioners are engaged by clients. Listing requires programme completion.",
-  },
+  ...(CONSULTANTS_ENABLED
+    ? [
+        {
+          q: "How does this relate to grcmentor.ai?",
+          a: "grcmentor.ai trains and assesses practitioners. GRC Department is where those practitioners are engaged by clients. Listing requires programme completion.",
+        },
+      ]
+    : []),
 ];
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -97,7 +110,8 @@ export default async function HomePage() {
   const [{ categories, service_count, practice_areas }, directory] = await Promise.all([
     getCatalogue(),
     // The landing page must render even if the directory call fails — it is a strip, not the page.
-    getDirectoryPreview().catch(() => null),
+    // With the consultant side off there is nothing to fetch (and the endpoint is closed).
+    CONSULTANTS_ENABLED ? getDirectoryPreview().catch(() => null) : Promise.resolve(null),
   ]);
   const consultants: ConsultantCard[] = directory?.consultants ?? [];
   const shortlist = consultants.slice(0, 3);
@@ -112,26 +126,29 @@ export default async function HomePage() {
       <main>
         {/* Hero */}
         <section className="border-b border-line bg-surface">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 lg:grid-cols-[1.35fr_1fr] lg:items-center">
+          {/* *:min-w-0 — a grid item defaults to min-width:auto, so the truncated service names in the
+              right-hand card would otherwise hold the column at full text width and push a phone
+              screen sideways. */}
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 *:min-w-0 lg:grid-cols-[1.35fr_1fr] lg:items-center">
             <div>
-              <Eyebrow>grcmentor.ai talent network</Eyebrow>
+              <Eyebrow>{CONSULTANTS_ENABLED ? "grcmentor.ai talent network" : "Remote GRC delivery"}</Eyebrow>
               <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-[-0.035em] text-ink sm:text-5xl">
                 Governance, risk and compliance specialists in your time zone — wherever you operate.
               </h1>
               <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-4">
-                GRC Department places vetted remote practitioners with organisations that need
-                audit-ready programmes. Every consultant has completed the grcmentor.ai curriculum and a
-                technical review before being listed for engagement.
+                {CONSULTANTS_ENABLED
+                  ? "GRC Department places vetted remote practitioners with organisations that need audit-ready programmes. Every consultant has completed the grcmentor.ai curriculum and a technical review before being listed for engagement."
+                  : "GRC Department delivers audit-ready governance, risk and compliance work as discrete, scoped services — engaged singly or bundled, priced before work starts, and delivered remotely within your working hours."}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="/brief" className="focus-ring rounded-lg bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-dark">
                   Submit an engagement brief
                 </Link>
                 <Link
-                  href="/talent"
+                  href={CONSULTANTS_ENABLED ? "/talent" : "/services"}
                   className="focus-ring rounded-lg border border-line-strong bg-surface px-5 py-3 font-semibold text-ink hover:bg-sunken"
                 >
-                  Browse consultants
+                  {CONSULTANTS_ENABLED ? "Browse consultants" : "Browse the catalogue"}
                 </Link>
               </div>
               <ul className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-5">
@@ -175,25 +192,72 @@ export default async function HomePage() {
                 </div>
               </div>
             )}
+
+            {!CONSULTANTS_ENABLED && (
+              <div className="rounded-xl border border-line bg-paper p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-ink-5">Start with one service</p>
+                  <span className="text-xs text-ink-5">{service_count} in the catalogue</span>
+                </div>
+                <ul className="mt-4 space-y-2">
+                  {categories.slice(0, 4).map((c) => (
+                    <li key={c.code}>
+                      <Link
+                        href={`/services?cat=${c.code}`}
+                        className="focus-ring flex items-center gap-3 rounded-lg border border-line bg-surface p-3 hover:border-line-strong"
+                      >
+                        <span className="rounded bg-ink px-1.5 py-0.5 font-mono text-[11px] font-semibold text-white">{c.code}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-ink">{c.services[0]?.name}</span>
+                          <span className="block truncate text-xs text-ink-5">{c.name}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4 flex items-center justify-between text-xs text-ink-5">
+                  <span>Priced in a written proposal</span>
+                  <Link href="/services" className="focus-ring rounded font-semibold text-accent hover:text-accent-dark">
+                    All services →
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
         {/* Two doors */}
         <section className="mx-auto grid max-w-6xl gap-5 px-4 py-16 md:grid-cols-2">
-          {[
-            {
-              eyebrow: "For organisations",
-              title: "Staff a compliance programme without a headcount request.",
-              body: "Select the services you need from the catalogue and a vetted consultant delivers them. Contracting, confidentiality agreements and administration are handled centrally.",
-              cta: { href: "/brief", label: "Submit a brief" },
-            },
-            {
-              eyebrow: "For consultants",
-              title: "Complete the programme, then practise on international engagements.",
-              body: "grcmentor.ai graduates apply for listing, set their own availability and working window, and are introduced to clients whose control environment matches their assessed competencies.",
-              cta: { href: "/consultants", label: "Apply for listing" },
-            },
-          ].map((card) => (
+          {(CONSULTANTS_ENABLED
+            ? [
+                {
+                  eyebrow: "For organisations",
+                  title: "Staff a compliance programme without a headcount request.",
+                  body: "Select the services you need from the catalogue and a vetted consultant delivers them. Contracting, confidentiality agreements and administration are handled centrally.",
+                  cta: { href: "/brief", label: "Submit a brief" },
+                },
+                {
+                  eyebrow: "For consultants",
+                  title: "Complete the programme, then practise on international engagements.",
+                  body: "grcmentor.ai graduates apply for listing, set their own availability and working window, and are introduced to clients whose control environment matches their assessed competencies.",
+                  cta: { href: "/consultants", label: "Apply for listing" },
+                },
+              ]
+            : [
+                {
+                  eyebrow: "Know what you need",
+                  title: "Pick the exact services from the catalogue.",
+                  body: "Select one service or bundle several, answer six scoping questions, and receive a written proposal with scope, duration and price within one business day.",
+                  cta: { href: "/services", label: "Browse the catalogue" },
+                },
+                {
+                  eyebrow: "Not sure where to start",
+                  title: "Describe the obligation and we will scope it.",
+                  body: "Tell us the framework, where you are today and the deadline. A GRC lead turns it into a scoped proposal — or comes back with the questions that decide it.",
+                  cta: { href: "/brief", label: "Submit a brief" },
+                },
+              ]
+          ).map((card) => (
             <div key={card.eyebrow} className="rounded-xl border border-line bg-surface p-7 transition-colors hover:border-line-strong">
               <p className="text-xs font-semibold uppercase tracking-wider text-ink-5">{card.eyebrow}</p>
               <h2 className="mt-3 text-xl font-bold leading-snug tracking-[-0.01em] text-ink">{card.title}</h2>
@@ -252,7 +316,7 @@ export default async function HomePage() {
         <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-28 px-4 py-16">
           <Eyebrow>How it works</Eyebrow>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-[-0.02em] text-ink">
-            Select the work. Scope it. A consultant delivers it.
+            Select the work. Scope it. We deliver it.
           </h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
             You do not have to define a consulting engagement from a blank page. The catalogue breaks
@@ -269,7 +333,8 @@ export default async function HomePage() {
           </ol>
         </section>
 
-        {/* Practice areas */}
+        {/* Practice areas — the talent directory's vocabulary, so only with the consultant side on */}
+        {CONSULTANTS_ENABLED && (
         <section id="practice-areas" className="scroll-mt-28 border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -309,6 +374,8 @@ export default async function HomePage() {
             </ul>
           </div>
         </section>
+
+        )}
 
         {/* Available for engagement */}
         {consultants.length > 0 && (
@@ -410,9 +477,17 @@ export default async function HomePage() {
               see what your own teams owe the engagement — the evidence exports and ticket samples that
               stall an audit when they go missing.
             </p>
-            <Link href="/portal" className="focus-ring mt-6 inline-block rounded-lg bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-dark">
-              Open the client portal
-            </Link>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/portal/signup" className="focus-ring rounded-lg bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-dark">
+                Create a client account
+              </Link>
+              <Link
+                href="/portal"
+                className="focus-ring rounded-lg border border-line-strong bg-surface px-5 py-3 font-semibold text-ink hover:bg-sunken"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
           <ul className="space-y-3">
             {[
@@ -429,7 +504,8 @@ export default async function HomePage() {
           </ul>
         </section>
 
-        {/* Vetting */}
+        {/* Vetting — the grcmentor.ai listing route, so only with the consultant side on */}
+        {CONSULTANTS_ENABLED && (
         <section id="vetting" className="scroll-mt-28 border-y border-line bg-surface">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <Eyebrow>Vetting</Eyebrow>
@@ -451,6 +527,8 @@ export default async function HomePage() {
             </ol>
           </div>
         </section>
+
+        )}
 
         {/* FAQ */}
         <section className="mx-auto max-w-3xl px-4 py-16">

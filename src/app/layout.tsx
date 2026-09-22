@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SITE_URL } from "@/lib/flags";
 import "./globals.css";
 
 // grcmentor's typefaces, exactly as web/src/app/layout.tsx loads them. GRC Department is the
@@ -16,9 +17,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GRC Department — remote governance, risk and compliance practitioners",
+  metadataBase: new URL(SITE_URL),
+  title: "GRC Department — governance, risk and compliance, delivered as scoped services",
   description:
-    "Vetted remote GRC consultants placed with organisations worldwide. The talent network of grcmentor.ai.",
+    "Scoped GRC services — assessments, policies, testing and compliance programmes — engaged singly or bundled, priced in a written proposal, and delivered remotely within your working hours.",
+  openGraph: {
+    siteName: "GRC Department",
+    type: "website",
+    url: SITE_URL,
+  },
 };
 
 export default function RootLayout({

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CONSULTANTS_ENABLED } from "@/lib/flags";
 import { Wordmark } from "./wordmark";
 
 type NavItem = {
@@ -14,17 +15,24 @@ type NavItem = {
   section?: string;
 };
 
-// The mockup's navigation, in its order.
-const NAV: NavItem[] = [
-  { href: "/talent", label: "Browse talent", match: ["/talent"] },
-  { href: "/services", label: "Services", match: ["/services", "/scoping"] },
-  { href: "/#practice-areas", label: "Practice areas", section: "practice-areas" },
-  { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
-  { href: "/consultants", label: "For consultants", match: ["/consultants"] },
-];
+// The mockup's navigation, in its order. With the consultant side switched off, the talent
+// items give way to the client-facing sections of the home page.
+const NAV: NavItem[] = CONSULTANTS_ENABLED
+  ? [
+      { href: "/talent", label: "Browse talent", match: ["/talent"] },
+      { href: "/services", label: "Services", match: ["/services", "/scoping"] },
+      { href: "/#practice-areas", label: "Practice areas", section: "practice-areas" },
+      { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
+      { href: "/consultants", label: "For consultants", match: ["/consultants"] },
+    ]
+  : [
+      { href: "/services", label: "Services", match: ["/services", "/scoping"] },
+      { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
+      { href: "/#engagement-models", label: "Engagement models", section: "engagement-models" },
+    ];
 
 const PORTALS: NavItem[] = [
-  { href: "/consultant-portal", label: "Consultant portal", match: ["/consultant-portal"] },
+  ...(CONSULTANTS_ENABLED ? [{ href: "/consultant-portal", label: "Consultant portal", match: ["/consultant-portal"] }] : []),
   { href: "/portal", label: "Client portal", match: ["/portal"] },
 ];
 
@@ -92,6 +100,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50">
+      {CONSULTANTS_ENABLED && (
       <div className="border-b border-line bg-ink text-[13px] text-white/70">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2">
           <span className="font-semibold text-white">grcmentor</span>
@@ -109,6 +118,7 @@ export function SiteHeader() {
           </a>
         </div>
       </div>
+      )}
 
       <div className="border-b border-line bg-paper/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">

@@ -37,7 +37,7 @@ export default async function ScopingPage({
         </h1>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
           Six questions. A GRC lead reviews the request and returns a written proposal setting out
-          the deliverable, duration and the consultant assigned, within one business day.
+          the deliverable, duration, price and who will deliver it, within one business day.
         </p>
 
         <div className="mt-10">

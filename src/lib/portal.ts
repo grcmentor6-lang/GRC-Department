@@ -122,8 +122,51 @@ export interface Portal {
     requests_in_flight: number;
     timesheets_to_approve: number;
   };
-  requests: { id: string; kind: string; status: string; services: ServiceLine[]; created_at: string }[];
+  requests: { id: string; reference: string; kind: string; status: string; services: ServiceLine[]; created_at: string }[];
   activity: { who: string; what: string; at: string }[];
+}
+
+/** Mirrors backend app/core/password_policy.py, so the form can say what is wrong before submitting. */
+export const PASSWORD_RULE =
+  "At least 10 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.";
+
+export function passwordProblem(pw: string): string | null {
+  if (pw.length < 10 || !/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/\d/.test(pw) || !/[^A-Za-z0-9]/.test(pw)) {
+    return PASSWORD_RULE;
+  }
+  return null;
+}
+
+export interface SignupInput {
+  name: string;
+  email: string;
+  password: string;
+  company: string;
+  job_title?: string;
+  business_region: "Americas" | "EMEA" | "APAC";
+}
+
+export const signup = (input: SignupInput) =>
+  apiPost<{ message: string; email: string }>("/gd/client/signup", input);
+
+export const resendVerification = (email: string) =>
+  apiPost<{ message: string }>("/gd/client/resend-verification", { email });
+
+export const forgotPassword = (email: string) =>
+  apiPost<{ message: string }>("/gd/client/password/forgot", { email });
+
+/** Confirm an email from its link. Signs the contact in on success. */
+export async function verifyEmail(token: string): Promise<Contact> {
+  const res = await apiPost<{ access_token: string; contact: Contact }>("/gd/client/verify", { token });
+  setToken(res.access_token);
+  return res.contact;
+}
+
+/** Set a new password from a reset link. Signs the contact in on success. */
+export async function resetPassword(token: string, password: string): Promise<Contact> {
+  const res = await apiPost<{ access_token: string; contact: Contact }>("/gd/client/password/reset", { token, password });
+  setToken(res.access_token);
+  return res.contact;
 }
 
 export async function login(email: string, password: string): Promise<Contact> {

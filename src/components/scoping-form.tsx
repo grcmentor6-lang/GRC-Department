@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiPost, ApiError } from "@/lib/api";
+import { getToken } from "@/lib/portal";
+import { useClientSession } from "@/components/use-client-session";
 import type { Catalogue } from "@/lib/catalogue";
 import { ChoiceCards, Field, Submitted, inputClass, selectClass } from "@/components/form-bits";
 
@@ -49,9 +51,11 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
   const [region, setRegion] = useState(REGIONS[0]);
   const [existing, setExisting] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
+  const client = useClientSession();
 
   if (selected.length === 0) {
     return (
@@ -73,10 +77,10 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
   if (sent) {
     return (
       <Submitted
-        title="Scoping request received"
-        summary={`${selected.length} service${selected.length === 1 ? "" : "s"} scoped for ${
-          region
-        } business hours. A GRC lead will return a written proposal setting out the deliverable, duration, acceptance criteria and the profile of the consultant assigned, within one business day.`}
+        title={`Scoping request received — ${sent}`}
+        summary={`${selected.length} service${selected.length === 1 ? "" : "s"} for ${region} business hours. We have emailed a confirmation to ${
+          client?.email ?? email
+        }. A GRC lead will return a written proposal — deliverable, duration, price and acceptance criteria — within one business day.`}
       >
         <Link
           href="/services"
@@ -84,12 +88,14 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
         >
           Scope more services
         </Link>
-        <Link
-          href="/talent"
-          className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-sunken"
-        >
-          Browse consultants
-        </Link>
+        {client && (
+          <Link
+            href="/portal/dashboard?view=requests"
+            className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-sunken"
+          >
+            View in your portal
+          </Link>
+        )}
       </Submitted>
     );
   }
@@ -99,9 +105,12 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
     setBusy(true);
     setError(null);
     try {
-      await apiPost("/gd/requests", {
+      const res = await apiPost<{ reference: string }>(
+        "/gd/requests",
+        {
         kind: "scoping",
-        contact_email: email,
+        contact_email: client?.email ?? email,
+        contact_name: client?.name ?? name,
         service_codes: codes,
         answers: {
           boundary_question: primary?.scope_question ?? null,
@@ -111,8 +120,10 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
           business_hours: region,
           existing_material: existing,
         },
-      });
-      setSent(true);
+        },
+        { token: client ? getToken() : null },
+      );
+      setSent(res.reference);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -166,7 +177,7 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
 
         <Field
           label="Your business hours"
-          hint="Shortlists exclude consultants who cannot hold four hours of overlap with this."
+          hint="Every engagement is staffed to give you at least four hours of overlap with these hours."
         >
           <ChoiceCards name="region" options={REGIONS} value={region} onChange={setRegion} />
         </Field>
@@ -182,21 +193,41 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
             value={existing}
             onChange={(e) => setExisting(e.target.value)}
             className={inputClass}
-            placeholder="Anything already in place that the consultant should start from."
+            placeholder="Anything already in place that we should start from."
           />
         </Field>
 
-        <Field label="Where should the proposal go" htmlFor="email">
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-            placeholder="you@company.com"
-          />
-        </Field>
+        {client ? (
+          <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-3">
+            Signed in as <span className="font-semibold text-ink">{client.name}</span> — the proposal goes to{" "}
+            <span className="font-semibold text-ink">{client.email}</span> and this request will appear in your portal.
+          </p>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Your name" htmlFor="name">
+              <input
+                id="name"
+                required
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Where should the proposal go" htmlFor="email">
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+                placeholder="you@company.com"
+              />
+            </Field>
+          </div>
+        )}
 
         {error && (
           <p

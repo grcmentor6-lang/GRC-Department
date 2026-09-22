@@ -1,44 +1,59 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { ApiError } from "@/lib/api";
-import { login, type Contact } from "@/lib/portal";
+import { login, resendVerification, type Contact } from "@/lib/portal";
 import { Field, inputClass } from "@/components/form-bits";
 
 /**
- * The mockup offers Slack and Teams sign-in. Neither is built — channel provisioning is the
- * last phase — and a button that looks like it works but does not is worse than one that is
- * honest about it, so they are shown as what they are: not yet available.
+ * Client sign-in. Three outcomes beyond success, each with its own way forward: wrong credentials,
+ * an account whose email is not confirmed yet (offer to resend the link — the server only says
+ * this after the password checks out, so it reveals nothing to a stranger), and rate limiting.
  */
 export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resent, setResent] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setUnconfirmed(false);
+    setResent(false);
     try {
       onSignedIn(await login(email, password));
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 401
-          ? "Those credentials were not recognised."
-          : "Could not reach the server. Please try again in a moment.",
-      );
+      if (err instanceof ApiError && err.status === 403) {
+        setUnconfirmed(true);
+        setError(err.message);
+      } else if (err instanceof ApiError && err.status === 401) {
+        setError("That email and password do not match a client account.");
+      } else if (err instanceof ApiError && err.status === 429) {
+        setError("Too many attempts. Wait a minute and try again.");
+      } else {
+        setError("Could not reach the server. Please try again in a moment.");
+      }
     } finally {
       setBusy(false);
     }
   }
 
+  async function resend() {
+    await resendVerification(email).catch(() => undefined);
+    setResent(true);
+  }
+
   return (
     <div className="mx-auto max-w-md">
       <div className="rounded-xl border border-line bg-surface p-7">
-        <h1 className="text-xl font-bold text-ink">Client portal</h1>
+        <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink">Client portal</h1>
         <p className="mt-2 text-sm leading-relaxed text-ink-4">
-          Your engagements, deliverables and consultants in one place.
+          Your requests, engagements and deliverables in one place.
         </p>
 
         <form onSubmit={submit} className="mt-6 space-y-5">
@@ -54,7 +69,15 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
               placeholder="you@company.com"
             />
           </Field>
-          <Field label="Password" htmlFor="password">
+          <div>
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="password" className="block text-sm font-semibold text-ink">
+                Password
+              </label>
+              <Link href="/portal/forgot" className="focus-ring rounded text-sm font-medium text-accent hover:text-accent-dark">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"
@@ -62,17 +85,22 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={inputClass}
+              className={`mt-2 ${inputClass}`}
             />
-          </Field>
+          </div>
 
           {error && (
-            <p
-              role="alert"
-              className="rounded-lg border border-line-strong bg-sunken px-4 py-3 text-sm text-ink-2"
-            >
+            <div role="alert" className="rounded-lg border border-line-strong bg-sunken px-4 py-3 text-sm text-ink-2">
               {error}
-            </p>
+              {unconfirmed &&
+                (resent ? (
+                  <p className="mt-2 font-medium text-positive">A new confirmation link is on its way.</p>
+                ) : (
+                  <button type="button" onClick={resend} className="focus-ring mt-2 block rounded font-semibold text-accent hover:text-accent-dark">
+                    Send the confirmation link again
+                  </button>
+                ))}
+            </div>
           )}
 
           <button
@@ -84,16 +112,12 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
           </button>
         </form>
 
-        <div className="mt-6 border-t border-line pt-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-ink-5">
-            Workspace sign-in
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-5">
-            Slack and Microsoft Teams sign-in, and the per-engagement channels that come with it,
-            are not built yet. When they are, connecting a workspace will create your account and
-            provision the channels in one step.
-          </p>
-        </div>
+        <p className="mt-6 border-t border-line pt-5 text-sm text-ink-5">
+          New to GRC Department?{" "}
+          <Link href="/portal/signup" className="focus-ring rounded font-semibold text-accent hover:text-accent-dark">
+            Create a client account
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -57,8 +57,7 @@ export function CatalogueBrowser({ catalogue }: { catalogue: Catalogue }) {
         Engage one service, or bundle several into a single statement of work.
       </h1>
       <p className="mt-4 max-w-2xl leading-relaxed text-ink-4">
-        Every item below is a discrete, scoped unit of GRC work delivered remotely by a vetted
-        consultant. Request a proposal for a single service, or combine services across
+        Every item below is a discrete, scoped unit of GRC work, delivered remotely. Request a proposal for a single service, or combine services across
         categories and we will scope the bundle as one engagement.
       </p>
 

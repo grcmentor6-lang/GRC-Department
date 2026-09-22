@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiPost, ApiError } from "@/lib/api";
+import { getToken } from "@/lib/portal";
+import { useClientSession } from "@/components/use-client-session";
 import { ChoiceCards, Field, Submitted, inputClass, selectClass } from "@/components/form-bits";
 
 const FRAMEWORKS = [
@@ -35,29 +37,39 @@ export function BriefForm() {
   const [hours, setHours] = useState(20);
   const [notes, setNotes] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<string | null>(null);
+  const client = useClientSession();
 
   if (sent) {
     return (
       <Submitted
-        title="Brief received"
-        summary={`${framework}, ${region} business hours, around ${hours} hours a week. A GRC lead will respond within one business day with a shortlist. In the meantime you can review matching consultants in the directory.`}
+        title={`Brief received — ${sent}`}
+        summary={`We have emailed a confirmation to ${client?.email ?? email}. A GRC lead will reply within one business day with a scoped proposal, or with the questions that decide it. Quote ${sent} if you write to us.`}
       >
         <Link
-          href="/talent"
+          href="/services"
           className="focus-ring rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:bg-accent-dark"
         >
-          View matching consultants
+          Browse the catalogue
         </Link>
         <button
           type="button"
-          onClick={() => setSent(false)}
+          onClick={() => setSent(null)}
           className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-sunken"
         >
           Submit another brief
         </button>
+        {client && (
+          <Link
+            href="/portal/dashboard?view=requests"
+            className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-sunken"
+          >
+            View in your portal
+          </Link>
+        )}
       </Submitted>
     );
   }
@@ -67,9 +79,12 @@ export function BriefForm() {
     setBusy(true);
     setError(null);
     try {
-      await apiPost("/gd/requests", {
+      const res = await apiPost<{ reference: string }>(
+        "/gd/requests",
+        {
         kind: "brief",
-        contact_email: email,
+        contact_email: client?.email ?? email,
+        contact_name: client?.name ?? name,
         // An open brief names no catalogue services by definition — that is the lead's job.
         service_codes: [],
         answers: {
@@ -80,8 +95,10 @@ export function BriefForm() {
           hours_per_week: hours,
         },
         notes,
-      });
-      setSent(true);
+        },
+        { token: client ? getToken() : null },
+      );
+      setSent(res.reference);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -128,7 +145,7 @@ export function BriefForm() {
 
         <Field
           label="Business hours"
-          hint="Shortlists exclude consultants who cannot hold four hours of overlap with this."
+          hint="Every engagement is staffed to give you at least four hours of overlap with these hours."
         >
           <ChoiceCards name="region" options={REGIONS} value={region} onChange={setRegion} />
         </Field>
@@ -162,17 +179,37 @@ export function BriefForm() {
           />
         </Field>
 
-        <Field label="Where should the shortlist go" htmlFor="email">
-          <input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-            placeholder="you@company.com"
-          />
-        </Field>
+        {client ? (
+          <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-3">
+            Signed in as <span className="font-semibold text-ink">{client.name}</span> — the proposal goes to{" "}
+            <span className="font-semibold text-ink">{client.email}</span> and this request will appear in your portal.
+          </p>
+        ) : (
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Your name" htmlFor="name">
+              <input
+                id="name"
+                required
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Where should the proposal go" htmlFor="email">
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+                placeholder="you@company.com"
+              />
+            </Field>
+          </div>
+        )}
 
         {error && (
           <p
@@ -197,7 +234,7 @@ export function BriefForm() {
           <h2 className="font-bold text-ink">What happens next</h2>
           <ul className="mt-4 space-y-3 text-sm leading-relaxed text-ink-4">
             <li>No obligation to engage — briefs are free to submit and confidential.</li>
-            <li>Interviews are scheduled directly with the consultant.</li>
+            <li>Scope, duration and price are agreed in writing before anything starts.</li>
             <li>A two-week trial period applies once work commences.</li>
           </ul>
           <p className="mt-5 border-t border-line pt-4 text-xs leading-relaxed text-ink-5">
@@ -205,7 +242,7 @@ export function BriefForm() {
             <Link href="/services" className="focus-ring rounded text-accent hover:text-accent-dark">
               service catalogue
             </Link>{" "}
-            gets you a priced proposal instead of a shortlist.
+            lets you pick the exact services instead.
           </p>
         </div>
       </aside>

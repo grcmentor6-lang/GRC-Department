@@ -39,11 +39,15 @@ export async function apiGet<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
+export async function apiPost<T>(path: string, body: unknown, opts?: { token?: string | null }): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "POST",
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(opts?.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -66,6 +70,10 @@ function detailOf(body: unknown): string | null {
   if (body && typeof body === "object" && "detail" in body) {
     const d = (body as { detail: unknown }).detail;
     if (typeof d === "string") return d;
+    // Pydantic validation errors are a list of {msg}; the first one is what the user needs.
+    if (Array.isArray(d) && d.length && typeof d[0]?.msg === "string") {
+      return String(d[0].msg).replace(/^Value error, /, "");
+    }
   }
   return null;
 }

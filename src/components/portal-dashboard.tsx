@@ -20,12 +20,17 @@ const STAGE_TONE: Record<string, string> = {
   Scoping: "border-line-strong bg-muted text-ink-3",
 };
 
-export type ClientView = "overview" | "engagements" | "timesheets" | "activity";
-export const CLIENT_VIEWS: ClientView[] = ["overview", "engagements", "timesheets", "activity"];
+export type ClientView = "overview" | "requests" | "engagements" | "timesheets" | "activity";
+export const CLIENT_VIEWS: ClientView[] = ["overview", "requests", "engagements", "timesheets", "activity"];
 
 const BASE = "/portal/dashboard";
+
+const KIND_LABEL: Record<string, string> = { brief: "Engagement brief", scoping: "Scoping request" };
+// What a client should read for each queue state; "new" means a GRC lead has not replied yet.
+const REQUEST_STATUS: Record<string, string> = { new: "Awaiting proposal", proposal: "Proposal sent", accepted: "Accepted" };
 const TITLES: Record<ClientView, string> = {
   overview: "Overview",
+  requests: "Requests",
   engagements: "Engagements",
   timesheets: "Timesheets",
   activity: "Activity",
@@ -68,6 +73,7 @@ export function PortalDashboard({
 
   const nav: ShellNavItem[] = [
     { key: "overview", label: "Overview", icon: "overview" },
+    { key: "requests", label: "Requests", icon: "tasks", badge: portal.stats.requests_in_flight },
     { key: "engagements", label: "Engagements", icon: "briefcase", badge: portal.stats.deliverables_outstanding },
     { key: "timesheets", label: "Timesheets", icon: "timesheet", badge: portal.stats.timesheets_to_approve },
     { key: "activity", label: "Activity", icon: "activity" },
@@ -79,6 +85,28 @@ export function PortalDashboard({
     ["Items owed by your teams", portal.stats.items_owed_by_you, portal.stats.items_owed_by_you > 0],
     ["Timesheets to approve", portal.stats.timesheets_to_approve, portal.stats.timesheets_to_approve > 0],
   ];
+
+  const requestList = (items: Portal["requests"]) => (
+    <ul className="divide-y divide-line">
+      {items.map((r) => (
+        <li key={r.id} className="flex flex-wrap items-start gap-3 py-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-xs text-ink-5">{r.reference}</span>
+              <span className="text-sm font-medium text-ink">{KIND_LABEL[r.kind] ?? "Request"}</span>
+            </div>
+            {r.services.length > 0 && (
+              <p className="mt-1 text-sm text-ink-4">{r.services.map((s) => s.name).join(" · ")}</p>
+            )}
+            <p className="mt-0.5 text-xs text-ink-5">Submitted {fmtDate(r.created_at)}</p>
+          </div>
+          <span className="shrink-0 rounded border border-accent bg-accent-tint px-2 py-0.5 text-xs text-accent">
+            {REQUEST_STATUS[r.status] ?? r.status}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
 
   const noEngagements = (
     <div className="rounded-xl border border-line bg-surface p-8">
@@ -127,6 +155,29 @@ export function PortalDashboard({
           </dl>
 
           {portal.timesheets.length > 0 && <TimesheetsToApprove timesheets={portal.timesheets} onRefresh={onRefresh} />}
+
+          <section className="rounded-xl border border-line bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-ink">Your requests</h2>
+              {portal.requests.length > 3 && (
+                <button type="button" onClick={() => go("requests")} className="focus-ring rounded text-sm font-semibold text-accent hover:text-accent-dark">
+                  All requests →
+                </button>
+              )}
+            </div>
+            {portal.requests.length === 0 ? (
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <p className="text-sm leading-relaxed text-ink-5">
+                  No requests yet. Pick services from the catalogue, or describe what you need in a brief.
+                </p>
+                <Link href="/brief" className="focus-ring rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sunken">
+                  Submit a brief
+                </Link>
+              </div>
+            ) : (
+              requestList(portal.requests.slice(0, 3))
+            )}
+          </section>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
             <section className="rounded-xl border border-line bg-surface p-5">
@@ -188,6 +239,27 @@ export function PortalDashboard({
           </div>
         </div>
       )}
+
+      {view === "requests" &&
+        (portal.requests.length === 0 ? (
+          <div className="rounded-xl border border-line bg-surface p-8">
+            <h2 className="font-semibold text-ink">No requests yet</h2>
+            <p className="mt-2 max-w-lg text-sm leading-relaxed text-ink-4">
+              Briefs and scoping requests you submit while signed in appear here, with their reference and
+              where they stand. Each one gets a written reply within one business day.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href="/services" className="focus-ring rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
+                Browse the catalogue
+              </Link>
+              <Link href="/brief" className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken">
+                Submit a brief
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <section className="rounded-xl border border-line bg-surface p-5">{requestList(portal.requests)}</section>
+        ))}
 
       {view === "engagements" &&
         (portal.projects.length === 0 ? (
