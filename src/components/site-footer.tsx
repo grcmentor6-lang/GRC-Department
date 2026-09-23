@@ -10,6 +10,7 @@ const CLIENTS = {
     { href: "/portal/signup", label: "Create an account" },
     { href: "/portal", label: "Client portal" },
     { href: "/#engagement-models", label: "Engagement models" },
+    { href: "/slack-and-teams", label: "Slack & Teams updates" },
     ...(CONSULTANTS_ENABLED
       ? [
           { href: "/talent", label: "Browse talent" },

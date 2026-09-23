@@ -34,6 +34,17 @@ export interface Catalogue {
  * on the server and cached for an hour rather than re-requested per navigation. A deploy that
  * changes _seed/gd_services.json also restarts the server, which clears this.
  */
-export function getCatalogue(): Promise<Catalogue> {
-  return apiGet<Catalogue>("/gd/catalogue", { next: { revalidate: 3600 } });
+export async function getCatalogue(): Promise<Catalogue> {
+  // Retried because the home page and /services are prerendered at build time: a single dropped
+  // connection to the API would otherwise fail the whole deploy, which it has done twice.
+  // Three tries, a second apart; a backend that is genuinely down should still fail the build
+  // rather than publish a catalogue-less home page.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await apiGet<Catalogue>("/gd/catalogue", { next: { revalidate: 3600 } });
+    } catch (err) {
+      if (attempt === 3) throw err;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
 }
