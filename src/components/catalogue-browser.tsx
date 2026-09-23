@@ -36,7 +36,13 @@ export function CatalogueBrowser({ catalogue }: { catalogue: Catalogue }) {
     const q = query.trim().toLowerCase();
     if (q.length < 2) return null;
     return [...byCode.values()].filter(
-      (s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q),
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        // Tolerates a description-less service: the catalogue is cached for an hour, so a
+        // response fetched before the descriptions shipped can still be in play after a deploy.
+        (s.blurb ?? "").toLowerCase().includes(q) ||
+        // Codes are no longer on screen, but an old link or a quoted proposal still carries one.
+        s.code.toLowerCase().includes(q),
     );
   }, [query, byCode]);
 
@@ -90,6 +96,7 @@ export function CatalogueBrowser({ catalogue }: { catalogue: Catalogue }) {
               rows={results.map((s) => ({
                 code: s.code,
                 name: s.name,
+                blurb: s.blurb,
                 meta: s.category.name,
               }))}
               bundle={bundle}
@@ -113,13 +120,8 @@ export function CatalogueBrowser({ catalogue }: { catalogue: Catalogue }) {
                     onClick={() => setCategory(c.code)}
                     className="focus-ring h-full w-full rounded-xl border border-line bg-surface p-5 text-left transition-colors hover:border-accent hover:bg-accent-tint"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-ink px-1.5 py-0.5 font-mono text-[11px] font-semibold text-white">
-                        {c.code}
-                      </span>
-                      <span className="text-xs text-ink-5">{c.services.length} services</span>
-                    </div>
-                    <h2 className="mt-3 font-bold leading-snug text-ink">{c.name}</h2>
+                    <span className="text-xs text-ink-5">{c.services.length} services</span>
+                    <h2 className="mt-2 font-bold leading-snug text-ink">{c.name}</h2>
                     <p className="mt-2 text-sm leading-relaxed text-ink-5">{c.blurb}</p>
                   </button>
                 </li>
@@ -215,18 +217,13 @@ function CategoryPanel({
         ← All categories
       </button>
 
-      <div className="mt-4 flex items-center gap-2">
-        <span className="rounded bg-ink px-1.5 py-0.5 font-mono text-[11px] font-semibold text-white">
-          {category.code}
-        </span>
-        <span className="text-xs text-ink-5">{category.services.length} services</span>
-      </div>
-      <h2 className="mt-3 text-2xl font-semibold tracking-[-0.02em] text-ink">{category.name}</h2>
+      <p className="mt-4 text-xs text-ink-5">{category.services.length} services</p>
+      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-ink">{category.name}</h2>
       <p className="mt-2 max-w-2xl leading-relaxed text-ink-4">{category.blurb}</p>
 
       <ResultList
         className="mt-6"
-        rows={category.services.map((s) => ({ code: s.code, name: s.name }))}
+        rows={category.services.map((s) => ({ code: s.code, name: s.name, blurb: s.blurb }))}
         bundle={bundle}
         onToggle={onToggle}
         scopingHref={scopingHref}
@@ -246,7 +243,7 @@ function ResultList({
 }: {
   heading?: string;
   onClear?: () => void;
-  rows: { code: string; name: string; meta?: string }[];
+  rows: { code: string; name: string; blurb?: string; meta?: string }[];
   bundle: string[];
   onToggle: (code: string) => void;
   scopingHref: (codes: string[]) => string;
@@ -278,13 +275,11 @@ function ResultList({
           {rows.map((r) => {
             const inBundle = bundle.includes(r.code);
             return (
-              <li key={r.code} className="flex flex-wrap items-center gap-3 p-4">
+              <li key={r.code} className="flex flex-wrap items-start gap-3 p-4">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium leading-snug text-ink">{r.name}</p>
-                  <p className="mt-0.5 font-mono text-xs text-ink-5">
-                    {r.code}
-                    {r.meta && <span className="font-sans"> · {r.meta}</span>}
-                  </p>
+                  {r.blurb && <p className="mt-1 text-sm leading-relaxed text-ink-4">{r.blurb}</p>}
+                  {r.meta && <p className="mt-1 text-xs text-ink-5">{r.meta}</p>}
                 </div>
                 <button
                   type="button"

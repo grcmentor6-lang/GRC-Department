@@ -1,8 +1,11 @@
 import { apiGet } from "./api";
 
 export interface Service {
+  /** Stable identifier: stored on engagements, passed as ?codes=. Not shown to clients. */
   code: string;
   name: string;
+  /** One sentence saying what the work produces. Shown under the name in the catalogue. */
+  blurb: string;
 }
 
 export interface Category {
