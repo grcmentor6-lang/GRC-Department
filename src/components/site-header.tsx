@@ -11,6 +11,8 @@ type NavItem = {
   label: string;
   /** Path prefixes this item owns: /talent/<id> is still Browse talent, /scoping is Services. */
   match?: string[];
+  /** Prefixes a more specific item owns instead: /portal/signup belongs to Create account. */
+  except?: string[];
   /** Home-page section this item points at, highlighted while it is on screen. */
   section?: string;
 };
@@ -35,8 +37,11 @@ const NAV: NavItem[] = CONSULTANTS_ENABLED
 
 const PORTALS: NavItem[] = [
   ...(CONSULTANTS_ENABLED ? [{ href: "/consultant-portal", label: "Consultant portal", match: ["/consultant-portal"] }] : []),
-  { href: "/portal", label: "Client portal", match: ["/portal"] },
+  { href: "/portal", label: "Client portal", match: ["/portal"], except: ["/portal/signup"] },
 ];
+
+/** Sign-up is its own call to action, not a portal link: it is what a first-time visitor needs. */
+const CREATE_ACCOUNT: NavItem = { href: "/portal/signup", label: "Create account", match: ["/portal/signup"] };
 
 const HOME_SECTIONS = NAV.flatMap((n) => (n.section ? [n.section] : []));
 
@@ -87,7 +92,10 @@ export function SiteHeader() {
   const section = useSectionInView(pathname === "/");
 
   const isActive = (item: NavItem) =>
-    item.section ? pathname === "/" && section === item.section : (item.match ?? []).some((m) => owns(pathname, m));
+    item.section
+      ? pathname === "/" && section === item.section
+      : (item.match ?? []).some((m) => owns(pathname, m)) &&
+        !(item.except ?? []).some((m) => owns(pathname, m));
 
   // Current page: accent text plus a bar under the item, and aria-current so it is announced.
   const navClass = (active: boolean) =>
@@ -159,6 +167,17 @@ export function SiteHeader() {
               );
             })}
             <Link
+              href={CREATE_ACCOUNT.href}
+              aria-current={isActive(CREATE_ACCOUNT) ? "page" : undefined}
+              className={`focus-ring hidden rounded-lg border px-3.5 py-2 font-semibold sm:block ${
+                isActive(CREATE_ACCOUNT)
+                  ? "border-accent bg-accent-tint text-accent"
+                  : "border-line-strong text-ink-2 hover:border-rule hover:text-ink"
+              }`}
+            >
+              {CREATE_ACCOUNT.label}
+            </Link>
+            <Link
               href="/brief"
               aria-current={owns(pathname, "/brief") ? "page" : undefined}
               className={`focus-ring rounded-lg bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-dark ${
@@ -173,7 +192,7 @@ export function SiteHeader() {
                 Menu
               </summary>
               <nav aria-label="Main" className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-surface p-2 shadow-lg">
-                {[...NAV, ...PORTALS].map((item) => {
+                {[...NAV, ...PORTALS, CREATE_ACCOUNT].map((item) => {
                   const active = isActive(item);
                   return (
                     <Link
