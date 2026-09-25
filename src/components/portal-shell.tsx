@@ -83,13 +83,16 @@ export function PortalShell({
 
   const sidebar = (
     <>
-      <div className="flex h-[68px] items-center gap-2 border-b border-line px-5">
-        <Link href="/" className="focus-ring rounded text-[17px]">
+      {/* The same height and the same two lines as the main header beside it, so the rule under
+          each one is a single line across the page rather than two at slightly different heights. */}
+      <div className="flex h-[68px] shrink-0 flex-col justify-center border-b border-line px-5">
+        <Link href="/" className="focus-ring -my-0.5 rounded text-[17px] leading-tight">
           <Wordmark />
         </Link>
+        <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wider text-ink-5">{portal}</p>
       </div>
-      <p className="px-5 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-ink-5">{portal}</p>
-      <nav aria-label={portal} className="flex flex-1 flex-col gap-0.5 p-3 pt-1">
+      {/* min-h-0 lets this scroll instead of pushing the account block off a short screen. */}
+      <nav aria-label={portal} className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3">
         {nav.map((item) => {
           const on = item.key === active;
           return (
@@ -98,7 +101,8 @@ export function PortalShell({
               href={href(item.key)}
               onClick={() => setMenuOpen(false)}
               aria-current={on ? "page" : undefined}
-              className={`focus-ring flex h-10 items-center gap-3 rounded-lg px-3 text-[13.5px] transition-colors ${
+              // shrink-0, or a short window squeezes the rows instead of scrolling them.
+              className={`focus-ring flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-[13.5px] transition-colors ${
                 on ? "bg-accent-tint font-medium text-accent" : "text-ink-4 hover:bg-sunken hover:text-ink"
               }`}
             >
@@ -117,7 +121,7 @@ export function PortalShell({
           );
         })}
       </nav>
-      <div className="border-t border-line p-4">
+      <div className="shrink-0 border-t border-line p-4">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-[12px] font-semibold text-white">
             {user.initials}
