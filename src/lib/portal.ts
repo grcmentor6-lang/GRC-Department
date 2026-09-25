@@ -183,6 +183,47 @@ export const getMe = () => apiGet<Contact>("/gd/client/me", { ...auth(), cache: 
 export const getPortal = () =>
   apiGet<Portal>("/gd/client/portal", { ...auth(), cache: "no-store" });
 
+/** A chat platform this organisation could connect, and whether it has. Never carries a token. */
+export interface ChatChannel {
+  id: string;
+  name: string;
+  /** Opens the channel in the client's Slack. */
+  url: string;
+}
+
+export interface ChatPlatform {
+  platform: "slack" | "teams";
+  label: string;
+  /** False when this deploy has no app credentials for it: show it as unavailable, not broken. */
+  available: boolean;
+  connected: boolean;
+  workspace_name: string | null;
+  connected_by: string | null;
+  connected_at: string | null;
+  /** The channel we created for them, once they have asked for one. */
+  channel: ChatChannel | null;
+}
+
+export const getChatPlatforms = () =>
+  apiGet<{ platforms: ChatPlatform[] }>("/gd/client/chat", { ...auth(), cache: "no-store" });
+
+/** Where to send the client to authorise. The platform, not us, asks them to approve. */
+export const startChatConnect = (platform: string) =>
+  apiPost<{ url: string }>(`/gd/client/chat/${platform}/start`, {}, { token: getToken() ?? undefined });
+
+/** Create the engagement channel in the client's workspace. Idempotent: one channel per connection. */
+export const createChatChannel = (platform: string, name: string, isPrivate = false) =>
+  apiPost<ChatChannel>(`/gd/client/chat/${platform}/channel`, { name, private: isPrivate }, { token: getToken() ?? undefined });
+
+export async function disconnectChat(platform: string): Promise<void> {
+  const t = getToken();
+  const res = await fetch(`${BASE_URL}/gd/client/chat/${platform}`, {
+    method: "DELETE",
+    headers: t ? { Authorization: `Bearer ${t}` } : {},
+  });
+  if (!res.ok) throw new Error("Could not disconnect. Try again.");
+}
+
 export async function acceptDeliverable(id: string): Promise<void> {
   const t = getToken();
   // BASE_URL, not the raw env var: api.ts strips a trailing slash, and "https://x.onrender.com/"

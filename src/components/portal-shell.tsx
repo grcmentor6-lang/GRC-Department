@@ -14,7 +14,7 @@ import { Wordmark } from "./wordmark";
  * all land on the same section) while the portal's data is loaded once for the whole shell.
  */
 
-export type IconName = "overview" | "briefcase" | "tasks" | "clock" | "wallet" | "timesheet" | "activity" | "user";
+export type IconName = "overview" | "briefcase" | "tasks" | "clock" | "wallet" | "timesheet" | "activity" | "user" | "chat";
 
 const PATHS: Record<IconName, string> = {
   overview: "M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z",
@@ -25,6 +25,7 @@ const PATHS: Record<IconName, string> = {
   timesheet: "M8 2v4M16 2v4M3 8h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8 13l2 2 4-4",
   activity: "M22 12h-4l-3 9L9 3l-3 9H2",
   user: "M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+  chat: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
 };
 
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ChatConnections } from "./chat-connections";
 import { PortalShell, type ShellNavItem } from "@/components/portal-shell";
 import {
   acceptDeliverable,
@@ -20,8 +21,15 @@ const STAGE_TONE: Record<string, string> = {
   Scoping: "border-line-strong bg-muted text-ink-3",
 };
 
-export type ClientView = "overview" | "requests" | "engagements" | "timesheets" | "activity";
-export const CLIENT_VIEWS: ClientView[] = ["overview", "requests", "engagements", "timesheets", "activity"];
+export type ClientView = "overview" | "requests" | "engagements" | "timesheets" | "activity" | "connections";
+export const CLIENT_VIEWS: ClientView[] = [
+  "overview",
+  "requests",
+  "engagements",
+  "timesheets",
+  "activity",
+  "connections",
+];
 
 const BASE = "/portal/dashboard";
 
@@ -34,6 +42,7 @@ const TITLES: Record<ClientView, string> = {
   engagements: "Engagements",
   timesheets: "Timesheets",
   activity: "Activity",
+  connections: "Slack & Teams",
 };
 
 const initials = (name: string) =>
@@ -77,6 +86,7 @@ export function PortalDashboard({
     { key: "engagements", label: "Engagements", icon: "briefcase", badge: portal.stats.deliverables_outstanding },
     { key: "timesheets", label: "Timesheets", icon: "timesheet", badge: portal.stats.timesheets_to_approve },
     { key: "activity", label: "Activity", icon: "activity" },
+    { key: "connections", label: "Slack & Teams", icon: "chat" },
   ];
 
   const stats: [string, number, boolean][] = [
@@ -325,6 +335,8 @@ export function PortalDashboard({
             ))}
           </ul>
         ))}
+      {view === "connections" && <ChatConnections />}
+
     </PortalShell>
   );
 }
