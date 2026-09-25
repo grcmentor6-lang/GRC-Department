@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SignUpWith } from "./signup-with";
 import { useState } from "react";
 import { ApiError } from "@/lib/api";
 import { login, resendVerification, type Contact } from "@/lib/portal";
@@ -111,6 +112,8 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        <SignUpWith verb="Sign in" />
 
         <p className="mt-6 border-t border-line pt-5 text-sm text-ink-5">
           New to GRC Department?{" "}

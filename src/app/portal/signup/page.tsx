@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { SignUpWith } from "@/components/signup-with";
 import { AuthCard, Notice } from "@/components/auth-card";
 import { ChoiceCards, Field, inputClass } from "@/components/form-bits";
 import { ApiError } from "@/lib/api";
@@ -184,6 +185,9 @@ export default function SignupPage() {
           {busy ? "Creating your account…" : "Create account"}
         </button>
       </form>
+
+      <SignUpWith />
+
       <p className="mt-6 border-t border-line pt-4 text-sm text-ink-5">
         Already have an account?{" "}
         <Link href="/portal" className="focus-ring rounded font-semibold text-accent hover:text-accent-dark">

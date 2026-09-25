@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { ApiError } from "@/lib/api";
 import {
   createChatChannel,
@@ -115,11 +114,8 @@ export function ChatConnections() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-4">
           Connect the chat tool your team already uses and engagement updates can arrive there instead of
           only by email — the kickoff, a deliverable ready for review, the weekly digest, timesheets,
-          evidence requests and anything overdue.{" "}
-          <Link href="/slack-and-teams" className="focus-ring rounded text-accent underline underline-offset-4">
-            See what those messages look like
-          </Link>
-          .
+          evidence requests and anything overdue. Connecting creates a GRC Department channel in your
+          workspace.
         </p>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-5">
           Connecting only grants permission. Nothing is posted until you have a live engagement, and we
@@ -201,12 +197,11 @@ export function ChatConnections() {
 }
 
 /**
- * The engagement channel. One per connection: once it exists the card shows it and offers a way
- * in, rather than a button that would make a second one.
+ * The channel, which is made the moment a workspace is connected and is always called the same
+ * thing. There is nothing to ask the client — the only case that needs a button is a workspace
+ * that refused us a channel at the time, which is recoverable once an admin allows it.
  */
 function SlackChannel({ platform, onDone }: { platform: ChatPlatform; onDone: () => Promise<void> }) {
-  const [name, setName] = useState("grc-department");
-  const [isPrivate, setPrivate] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -228,15 +223,15 @@ function SlackChannel({ platform, onDone }: { platform: ChatPlatform; onDone: ()
     );
   }
 
-  const create = async () => {
+  const retry = async () => {
     setBusy(true);
     setProblem(null);
     try {
-      await createChatChannel("slack", name, isPrivate);
+      await createChatChannel("slack");
       await onDone();
     } catch (err) {
-      // The API's own sentence — "a channel with that name already exists", and the rest — is
-      // more use to the client than anything generic we could write here.
+      // Slack's own reason — "your workspace does not allow this app to create channels" and the
+      // rest — is more use to the client than anything generic we could write here.
       setProblem(err instanceof ApiError ? err.message : "The channel could not be created. Try again.");
     } finally {
       setBusy(false);
@@ -245,33 +240,18 @@ function SlackChannel({ platform, onDone }: { platform: ChatPlatform; onDone: ()
 
   return (
     <div className="mt-4 rounded-lg border border-line bg-paper p-3">
-      <label htmlFor="ch-name" className="text-sm font-medium text-ink">
-        Create a channel
-      </label>
+      <p className="text-sm text-ink-2">No channel yet</p>
       <p className="mt-1 text-xs leading-relaxed text-ink-5">
-        We will make it in your workspace and post one message so you can see it works.
+        Your workspace did not let us create one when you connected.
       </p>
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-sm text-ink-5">#</span>
-        <input
-          id="ch-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="focus-ring min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-sm text-ink"
-        />
-      </div>
-      <label className="mt-2 flex items-center gap-2 text-xs text-ink-4">
-        <input type="checkbox" checked={isPrivate} onChange={(e) => setPrivate(e.target.checked)} />
-        Make it private
-      </label>
       {problem && <p className="mt-2 text-xs text-ink-3">{problem}</p>}
       <button
         type="button"
-        onClick={() => void create()}
-        disabled={busy || !name.trim()}
-        className="focus-ring mt-3 rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-60"
+        onClick={() => void retry()}
+        disabled={busy}
+        className="focus-ring mt-3 rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-60"
       >
-        {busy ? "Creating…" : "Create channel"}
+        {busy ? "Trying…" : "Try again"}
       </button>
     </div>
   );

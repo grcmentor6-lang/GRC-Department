@@ -204,6 +204,23 @@ export interface ChatPlatform {
   channel: ChatChannel | null;
 }
 
+/** Which sign-up buttons to offer. Public: the sign-up page asks before anyone has an account. */
+export const getSignupPlatforms = () =>
+  apiGet<{ platforms: { platform: "slack" | "teams"; label: string; available: boolean }[] }>(
+    "/gd/client/chat/platforms",
+    { cache: "no-store" },
+  );
+
+/** Where a "Sign up with …" button sends the browser. A redirect, not a fetch. */
+export const signupWithUrl = (platform: string) => `${BASE_URL}/gd/client/chat/${platform}/signup`;
+
+/** Trade the token in the return URL for a session, the way a confirmation link does. */
+export async function sessionFromHandoff(token: string): Promise<Contact> {
+  const res = await apiPost<{ access_token: string; contact: Contact }>("/gd/client/chat/session", { token });
+  setToken(res.access_token);
+  return res.contact;
+}
+
 export const getChatPlatforms = () =>
   apiGet<{ platforms: ChatPlatform[] }>("/gd/client/chat", { ...auth(), cache: "no-store" });
 
@@ -211,9 +228,9 @@ export const getChatPlatforms = () =>
 export const startChatConnect = (platform: string) =>
   apiPost<{ url: string }>(`/gd/client/chat/${platform}/start`, {}, { token: getToken() ?? undefined });
 
-/** Create the engagement channel in the client's workspace. Idempotent: one channel per connection. */
-export const createChatChannel = (platform: string, name: string, isPrivate = false) =>
-  apiPost<ChatChannel>(`/gd/client/chat/${platform}/channel`, { name, private: isPrivate }, { token: getToken() ?? undefined });
+/** Retry the channel, for a workspace that refused one when it was connected. */
+export const createChatChannel = (platform: string) =>
+  apiPost<ChatChannel>(`/gd/client/chat/${platform}/channel`, {}, { token: getToken() ?? undefined });
 
 export async function disconnectChat(platform: string): Promise<void> {
   const t = getToken();

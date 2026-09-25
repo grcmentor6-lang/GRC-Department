@@ -25,14 +25,12 @@ const NAV: NavItem[] = CONSULTANTS_ENABLED
       { href: "/services", label: "Services", match: ["/services", "/scoping"] },
       { href: "/#practice-areas", label: "Practice areas", section: "practice-areas" },
       { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
-      { href: "/slack-and-teams", label: "Slack & Teams", match: ["/slack-and-teams"] },
       { href: "/consultants", label: "For consultants", match: ["/consultants"] },
     ]
   : [
       { href: "/services", label: "Services", match: ["/services", "/scoping"] },
       { href: "/#how-it-works", label: "How it works", section: "how-it-works" },
       { href: "/#engagement-models", label: "Engagement models", section: "engagement-models" },
-      { href: "/slack-and-teams", label: "Slack & Teams", match: ["/slack-and-teams"] },
     ];
 
 const PORTALS: NavItem[] = [
