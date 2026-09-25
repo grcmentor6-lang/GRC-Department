@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSignupPlatforms, signupWithUrl } from "@/lib/portal";
+import { getSignupPlatforms, lastKnownPlatforms, signupWithUrl, type SignupPlatform } from "@/lib/portal";
 
 /**
  * "Sign up with Slack" and "Sign up with Microsoft Teams", under the email form on both account
@@ -16,7 +16,13 @@ import { getSignupPlatforms, signupWithUrl } from "@/lib/portal";
  * is visible and its absence is explained.
  */
 
-type Platform = { platform: "slack" | "teams"; label: string; available: boolean };
+type Platform = SignupPlatform;
+
+/** Shown while we do not yet know, so the buttons never simply fail to appear. */
+const PLACEHOLDERS: Platform[] = [
+  { platform: "slack", label: "Slack", available: false },
+  { platform: "teams", label: "Microsoft Teams", available: false },
+];
 
 /**
  * What the platform's own reason means, in words the person can act on. Anything unmapped still
@@ -87,18 +93,30 @@ const LOGOS: Record<string, React.ReactNode> = {
 
 export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" }) {
   const [platforms, setPlatforms] = useState<Platform[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      // Whatever was true last time, immediately — then confirm it.
+      const remembered = lastKnownPlatforms();
+      if (remembered) {
+        setPlatforms(remembered);
+        setLoading(false);
+      }
       try {
-        setPlatforms((await getSignupPlatforms()).platforms);
+        setPlatforms(await getSignupPlatforms());
       } catch {
-        setPlatforms([]); // the email form still works; offering nothing beats offering a broken button
+        // Three attempts failed. Keep whatever we are already showing rather than making the
+        // buttons disappear; the email form beside them works regardless.
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
 
-  if (!platforms?.length) return null;
+  // Never render nothing: an absent button reads as a broken page, and this one comes back by
+  // itself a minute later, which is worse.
+  const shown = platforms ?? PLACEHOLDERS;
 
   return (
     <div className="mt-6">
@@ -109,8 +127,8 @@ export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" 
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <div className="mt-4 grid gap-2">
-        {platforms.map((p) =>
+      <div className="mt-4 grid gap-2" aria-busy={loading}>
+        {shown.map((p) =>
           p.available ? (
             <a
               key={p.platform}
@@ -129,7 +147,7 @@ export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" 
             >
               {LOGOS[p.platform]}
               {verb} with {p.label}
-              <span className="text-xs font-normal">· soon</span>
+              <span className="text-xs font-normal">{loading ? "· checking…" : "· soon"}</span>
             </span>
           ),
         )}

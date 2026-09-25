@@ -216,12 +216,51 @@ export interface ChatPlatform {
   channel: ChatChannel | null;
 }
 
-/** Which sign-up buttons to offer. Public: the sign-up page asks before anyone has an account. */
-export const getSignupPlatforms = () =>
-  apiGet<{ platforms: { platform: "slack" | "teams"; label: string; available: boolean }[] }>(
-    "/gd/client/chat/platforms",
-    { cache: "no-store" },
-  );
+export interface SignupPlatform {
+  platform: "slack" | "teams";
+  label: string;
+  available: boolean;
+}
+
+const PLATFORMS_CACHE = "gd_signup_platforms";
+
+/**
+ * Which sign-up buttons to offer. Public: the sign-up page asks before anyone has an account.
+ *
+ * Retried, and the last good answer is remembered. The API sleeps when idle and its first request
+ * back can take most of a minute or fail outright — and a single failure used to hide the Slack
+ * and Teams buttons completely until the visitor navigated again, which read as the feature
+ * coming and going at random.
+ */
+export async function getSignupPlatforms(): Promise<SignupPlatform[]> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await apiGet<{ platforms: SignupPlatform[] }>("/gd/client/chat/platforms", {
+        cache: "no-store",
+      });
+      try {
+        localStorage.setItem(PLATFORMS_CACHE, JSON.stringify(res.platforms));
+      } catch {
+        /* private mode: we simply ask again next time */
+      }
+      return res.platforms;
+    } catch (err) {
+      if (attempt === 3) throw err;
+      await new Promise((r) => setTimeout(r, attempt * 1500));
+    }
+  }
+}
+
+/** What the buttons looked like last time, so a returning visitor sees them at once. */
+export function lastKnownPlatforms(): SignupPlatform[] | null {
+  try {
+    const raw = localStorage.getItem(PLATFORMS_CACHE);
+    const parsed = raw ? (JSON.parse(raw) as SignupPlatform[]) : null;
+    return Array.isArray(parsed) && parsed.length ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Where a "Sign up with …" button sends the browser. A redirect, not a fetch. */
 export const signupWithUrl = (platform: string) => `${BASE_URL}/gd/client/chat/${platform}/signup`;
