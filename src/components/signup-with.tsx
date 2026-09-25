@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { getSignupPlatforms, lastKnownPlatforms, signupWithUrl, type SignupPlatform } from "@/lib/portal";
 
 /**
- * "Sign up with Slack" and "Sign up with Microsoft Teams", under the email form on both account
- * pages.
+ * "Sign up with Slack", under the email form on both account pages.
  *
  * The button does more than identify somebody: approving it installs GRC Department in their
  * workspace, which is what lets us open their channel and post engagement updates later. The
@@ -18,11 +17,8 @@ import { getSignupPlatforms, lastKnownPlatforms, signupWithUrl, type SignupPlatf
 
 type Platform = SignupPlatform;
 
-/** Shown while we do not yet know, so the buttons never simply fail to appear. */
-const PLACEHOLDERS: Platform[] = [
-  { platform: "slack", label: "Slack", available: false },
-  { platform: "teams", label: "Microsoft Teams", available: false },
-];
+/** Shown while we do not yet know, so the button never simply fails to appear. */
+const PLACEHOLDERS: Platform[] = [{ platform: "slack", label: "Slack", available: false }];
 
 /**
  * What the platform's own reason means, in words the person can act on. Anything unmapped still
@@ -79,14 +75,6 @@ const LOGOS: Record<string, React.ReactNode> = {
       <path fill="#36C5F0" d="M8.3 5.1a2.1 2.1 0 1 1 2.1-2.1v2.1zM8.3 6.2a2.1 2.1 0 0 1 0 4.2H3a2.1 2.1 0 0 1 0-4.2z" />
       <path fill="#2EB67D" d="M18.9 8.3a2.1 2.1 0 1 1 2.1 2.1h-2.1zM17.8 8.3a2.1 2.1 0 0 1-4.2 0V3a2.1 2.1 0 0 1 4.2 0z" />
       <path fill="#ECB22E" d="M15.7 18.9a2.1 2.1 0 1 1-2.1 2.1v-2.1zM15.7 17.8a2.1 2.1 0 0 1 0-4.2H21a2.1 2.1 0 0 1 0 4.2z" />
-    </svg>
-  ),
-  teams: (
-    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
-      <rect x="2" y="6" width="12" height="12" rx="2" fill="#5059C9" />
-      <path fill="#fff" d="M5 9h6v1.4H8.8V15H7.2v-4.6H5z" />
-      <circle cx="18" cy="7" r="2.4" fill="#7B83EB" />
-      <path fill="#7B83EB" d="M15.4 10.5H21a1 1 0 0 1 1 1v3.6a3.6 3.6 0 0 1-3.6 3.6 3.6 3.6 0 0 1-3.6-3.6z" />
     </svg>
   ),
 };

@@ -44,10 +44,10 @@ const SECTIONS: { h: string; p: string[] }[] = [
     ],
   },
   {
-    h: "Connecting Slack or Microsoft Teams",
+    h: "Connecting Slack",
     p: [
-      "Connecting a workspace is optional. By connecting one you confirm you are permitted to install applications in it.",
-      "We create a channel and post engagement updates to it. You can disconnect at any time in the portal; removing the application from the workspace itself is done in Slack or Teams by whoever administers it.",
+      "Connecting your Slack workspace is optional. By connecting one you confirm you are permitted to install applications in it.",
+      "We create a channel and post engagement updates to it. Removing the application, and with it our access, is done in Slack by whoever administers the workspace.",
     ],
   },
   {

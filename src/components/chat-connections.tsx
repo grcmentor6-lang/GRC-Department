@@ -1,19 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import {
   createChatChannel,
   joinChatChannel,
-  disconnectChat,
   getChatPlatforms,
   startChatConnect,
   type ChatPlatform,
 } from "@/lib/portal";
 
 /**
- * Connect the client's own Slack workspace or Microsoft Teams tenant.
+ * Connect the client's own Slack workspace.
  *
  * Connection only: nothing is posted yet, and the panel says so rather than implying messages
  * start arriving. Authorising happens on the platform's own consent screen — we send the client
@@ -36,17 +35,7 @@ const SLACK_LOGO = (
   </svg>
 );
 
-const TEAMS_LOGO = (
-  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-    <rect x="2" y="6" width="12" height="12" rx="2" fill="#5059C9" />
-    <path fill="#fff" d="M5 9h6v1.4H8.8V15H7.2v-4.6H5z" />
-    <circle cx="18" cy="7" r="2.4" fill="#7B83EB" />
-    <path fill="#7B83EB" d="M15.4 10.5H21a1 1 0 0 1 1 1v3.6a3.6 3.6 0 0 1-3.6 3.6 3.6 3.6 0 0 1-3.6-3.6z" />
-  </svg>
-);
-
 export function ChatConnections() {
-  const router = useRouter();
   const params = useSearchParams();
   const outcome = OUTCOME[params.get("status") ?? ""];
 
@@ -81,21 +70,6 @@ export function ChatConnections() {
     }
   };
 
-  const remove = async (platform: string, label: string) => {
-    if (!window.confirm(`Disconnect ${label}? We will stop posting there.`)) return;
-    setBusy(platform);
-    setError(null);
-    try {
-      await disconnectChat(platform);
-      router.replace("/portal/dashboard?view=connections");
-      await load();
-    } catch {
-      setError("Could not disconnect. Try again.");
-    } finally {
-      setBusy(null);
-    }
-  };
-
   return (
     <div className="space-y-5">
       {outcome && (
@@ -113,10 +87,8 @@ export function ChatConnections() {
       <div className="rounded-xl border border-line bg-surface p-6">
         <h2 className="font-semibold text-ink">Where we reach your team</h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-4">
-          Connect the chat tool your team already uses and engagement updates can arrive there instead of
-          only by email — the kickoff, a deliverable ready for review, the weekly digest, timesheets,
-          evidence requests and anything overdue. Connecting creates a GRC Department channel in your
-          workspace.
+          Connect your Slack workspace and we will create a channel there for your engagement. Updates
+          about your work arrive in it, alongside the email you already get.
         </p>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-5">
           Connecting only grants permission. Nothing is posted until you have a live engagement, and we
@@ -133,7 +105,7 @@ export function ChatConnections() {
           {platforms.map((p) => (
             <li key={p.platform} className="rounded-xl border border-line bg-surface p-5">
               <div className="flex items-center gap-2">
-                {p.platform === "slack" ? SLACK_LOGO : TEAMS_LOGO}
+                {SLACK_LOGO}
                 <h3 className="font-semibold text-ink">{p.label}</h3>
                 {p.connected && (
                   <span className="ml-auto rounded-full border border-positive-line bg-positive-tint px-2 py-0.5 text-xs text-positive">
@@ -151,17 +123,9 @@ export function ChatConnections() {
                   </p>
                   {p.platform === "slack" && <SlackChannel platform={p} onDone={load} />}
 
-                  <button
-                    type="button"
-                    onClick={() => void remove(p.platform, p.label)}
-                    disabled={busy === p.platform}
-                    className="focus-ring mt-4 rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-60"
-                  >
-                    {busy === p.platform ? "Disconnecting…" : "Disconnect"}
-                  </button>
-                  <p className="mt-3 text-xs leading-relaxed text-ink-5">
-                    Disconnecting stops us posting. The channel stays, and removing the app itself is done
-                    in {p.label}, by whoever administers it.
+                  <p className="mt-4 text-xs leading-relaxed text-ink-5">
+                    To stop this, remove GRC Department from {p.label} — whoever administers the workspace
+                    can do that, and it is the only place the decision really lives.
                   </p>
                 </>
               ) : p.available ? (

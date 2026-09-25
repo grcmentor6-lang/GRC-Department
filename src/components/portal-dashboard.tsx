@@ -58,7 +58,7 @@ const TITLES: Record<ClientView, string> = {
   activity: "Activity",
   new: "New request",
   team: "Your team",
-  connections: "Slack & Teams",
+  connections: "Slack",
   settings: "Settings",
 };
 
@@ -118,7 +118,7 @@ export function PortalDashboard({
     { key: "timesheets", label: "Timesheets", icon: "timesheet", badge: portal.stats.timesheets_to_approve },
     { key: "activity", label: "Activity", icon: "activity" },
     { key: "team", label: "Your team", icon: "user" },
-    { key: "connections", label: "Slack & Teams", icon: "chat" },
+    { key: "connections", label: "Slack", icon: "chat" },
     { key: "settings", label: "Settings", icon: "clock" },
   ];
 

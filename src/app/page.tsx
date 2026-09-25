@@ -494,7 +494,7 @@ export default async function HomePage() {
               ["Accept deliverables", "Acceptance closes the milestone it belongs to."],
               ["Approve timesheets", "Hours you approve become payable; a week you do not review within five business days is approved automatically."],
               ["See what you owe", "Every item your teams owe the consultant, with what is overdue."],
-              ["Slack and Microsoft Teams", "Per-engagement channels are planned, not yet available."],
+              ["Slack", "Connect your workspace and your engagement gets a channel in it."],
             ].map(([t, b]) => (
               <li key={t} className="rounded-xl border border-line bg-surface p-4">
                 <p className="font-semibold text-ink">{t}</p>

@@ -204,7 +204,7 @@ export interface ChatChannel {
 }
 
 export interface ChatPlatform {
-  platform: "slack" | "teams";
+  platform: "slack";
   label: string;
   /** False when this deploy has no app credentials for it: show it as unavailable, not broken. */
   available: boolean;
@@ -217,7 +217,7 @@ export interface ChatPlatform {
 }
 
 export interface SignupPlatform {
-  platform: "slack" | "teams";
+  platform: "slack";
   label: string;
   available: boolean;
 }
@@ -229,8 +229,8 @@ const PLATFORMS_CACHE = "gd_signup_platforms";
  *
  * Retried, and the last good answer is remembered. The API sleeps when idle and its first request
  * back can take most of a minute or fail outright — and a single failure used to hide the Slack
- * and Teams buttons completely until the visitor navigated again, which read as the feature
- * coming and going at random.
+ * Slack button completely until the visitor navigated again, which read as the feature coming
+ * and going at random.
  */
 export async function getSignupPlatforms(): Promise<SignupPlatform[]> {
   for (let attempt = 1; ; attempt++) {
@@ -336,15 +336,6 @@ export const joinChatChannel = (platform: string) =>
 /** Retry the channel, for a workspace that refused one when it was connected. */
 export const createChatChannel = (platform: string) =>
   apiPost<ChatChannel>(`/gd/client/chat/${platform}/channel`, {}, { token: getToken() ?? undefined });
-
-export async function disconnectChat(platform: string): Promise<void> {
-  const t = getToken();
-  const res = await fetch(`${BASE_URL}/gd/client/chat/${platform}`, {
-    method: "DELETE",
-    headers: t ? { Authorization: `Bearer ${t}` } : {},
-  });
-  if (!res.ok) throw new Error("Could not disconnect. Try again.");
-}
 
 export async function acceptDeliverable(id: string): Promise<void> {
   const t = getToken();
