@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api";
 import {
   createChatChannel,
+  joinChatChannel,
   disconnectChat,
   getChatPlatforms,
   startChatConnect,
@@ -204,6 +205,20 @@ export function ChatConnections() {
 function SlackChannel({ platform, onDone }: { platform: ChatPlatform; onDone: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [said, setSaid] = useState<string | null>(null);
+
+  const rejoin = async () => {
+    setBusy(true);
+    setProblem(null);
+    setSaid(null);
+    try {
+      setSaid((await joinChatChannel("slack")).message);
+    } catch (err) {
+      setProblem(err instanceof ApiError ? err.message : "Could not add you. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   if (platform.channel) {
     return (
@@ -219,6 +234,21 @@ function SlackChannel({ platform, onDone }: { platform: ChatPlatform; onDone: ()
         >
           Open it in Slack
         </a>
+        {/* Leaving a channel in Slack takes one click; getting back into one you cannot find
+            takes rather more. This is that click, in reverse. */}
+        <div className="mt-3 border-t border-line pt-3">
+          <p className="text-xs leading-relaxed text-ink-5">Left the channel, or cannot see it?</p>
+          <button
+            type="button"
+            onClick={() => void rejoin()}
+            disabled={busy}
+            className="focus-ring mt-2 rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-60"
+          >
+            {busy ? "Adding you…" : "Add me to the channel"}
+          </button>
+          {problem && <p className="mt-2 text-xs text-ink-3">{problem}</p>}
+          {said && <p className="mt-2 text-xs text-positive">{said}</p>}
+        </div>
       </div>
     );
   }

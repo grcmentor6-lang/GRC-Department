@@ -329,6 +329,10 @@ export const getChatPlatforms = () =>
 export const startChatConnect = (platform: string) =>
   apiPost<{ url: string }>(`/gd/client/chat/${platform}/start`, {}, { token: getToken() ?? undefined });
 
+/** Put yourself back in the channel — leaving one in Slack is easy, rejoining is not. */
+export const joinChatChannel = (platform: string) =>
+  apiPost<{ message: string }>(`/gd/client/chat/${platform}/channel/me`, {}, { token: getToken() ?? undefined });
+
 /** Retry the channel, for a workspace that refused one when it was connected. */
 export const createChatChannel = (platform: string) =>
   apiPost<ChatChannel>(`/gd/client/chat/${platform}/channel`, {}, { token: getToken() ?? undefined });
