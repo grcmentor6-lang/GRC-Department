@@ -18,6 +18,54 @@ import { getSignupPlatforms, signupWithUrl } from "@/lib/portal";
 
 type Platform = { platform: "slack" | "teams"; label: string; available: boolean };
 
+/**
+ * What the platform's own reason means, in words the person can act on. Anything unmapped still
+ * shows its code: a failure nobody can name is a failure nobody can fix.
+ */
+const REASONS: Record<string, string> = {
+  no_email:
+    "Slack did not share your email address, so no account could be opened. Whoever administers the workspace has to allow that, or you can sign up with your email below.",
+  missing_scope: "Our Slack app is missing a permission it needs. Tell us and we will fix it — this one is on us.",
+  invalid_code: "That authorisation had already been used. Start again from this page.",
+  bad_redirect_uri: "Slack rejected our return address. This is our configuration, not yours — tell us and we will fix it.",
+  invalid_client_id: "Slack does not recognise our app. Tell us and we will fix it.",
+  access_denied: "The authorisation was cancelled, so nothing changed.",
+  unreachable: "We could not reach Slack. Try again in a moment.",
+};
+
+function Outcome() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read from the address bar rather than useSearchParams: this component is dropped into
+    // pages that render statically, and a hook would drag a Suspense boundary in with it. The
+    // state is set asynchronously, like the rest of the portal, to avoid a cascading render.
+    const q = new URLSearchParams(window.location.search);
+    const status = q.get("status");
+    if (!q.get("chat") || !status) return;
+    const reason = q.get("code");
+    void Promise.resolve().then(() => {
+      setCode(reason);
+      setMsg(
+        status === "cancelled"
+          ? "The authorisation was cancelled, so nothing changed."
+          : status === "expired"
+            ? "That took too long and the request expired. Try again."
+            : (reason && REASONS[reason]) || "The sign-up could not be completed.",
+      );
+    });
+  }, []);
+
+  if (!msg) return null;
+  return (
+    <div className="mb-5 rounded-lg border border-line-strong bg-sunken px-4 py-3 text-sm text-ink-3">
+      <p>{msg}</p>
+      {code && !REASONS[code] && <p className="mt-1 font-mono text-xs text-ink-5">Slack said: {code}</p>}
+    </div>
+  );
+}
+
 const LOGOS: Record<string, React.ReactNode> = {
   slack: (
     <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
@@ -54,6 +102,7 @@ export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" 
 
   return (
     <div className="mt-6">
+      <Outcome />
       <div className="flex items-center gap-3">
         <span className="h-px flex-1 bg-line" />
         <span className="text-xs font-semibold uppercase tracking-wider text-ink-5">or</span>
