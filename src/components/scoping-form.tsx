@@ -29,7 +29,16 @@ const TIMING = [
 
 const REGIONS = ["Americas", "EMEA", "APAC"];
 
-export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes: string[] }) {
+/** `onSubmitted`: see the note on BriefForm — the portal takes over from here. */
+export function ScopingForm({
+  catalogue,
+  codes,
+  onSubmitted,
+}: {
+  catalogue: Catalogue;
+  codes: string[];
+  onSubmitted?: (reference: string) => void;
+}) {
   const selected = codes
     .map((code) => {
       for (const c of catalogue.categories) {
@@ -123,6 +132,7 @@ export function ScopingForm({ catalogue, codes }: { catalogue: Catalogue; codes:
         },
         { token: client ? getToken() : null },
       );
+      if (onSubmitted) return onSubmitted(res.reference);
       setSent(res.reference);
     } catch (err) {
       setError(

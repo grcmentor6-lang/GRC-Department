@@ -29,7 +29,13 @@ const STAGES = [
 const SHAPES = ["Defined deliverable", "Ongoing support", "Advisory as needed", "Advise me"];
 const REGIONS = ["Americas", "EMEA", "APAC"];
 
-export function BriefForm() {
+/**
+ * `onSubmitted` is how the portal mounts this form. Given one, the form reports the reference
+ * upward the moment the request lands and renders nothing further: the portal refreshes its own
+ * data and shows the result in its Requests view, instead of this panel offering links back out
+ * to the public site — which is where a signed-in client used to be sent after asking for work.
+ */
+export function BriefForm({ onSubmitted }: { onSubmitted?: (reference: string) => void } = {}) {
   const [framework, setFramework] = useState(FRAMEWORKS[0]);
   const [stage, setStage] = useState(STAGES[0]);
   const [shape, setShape] = useState(SHAPES[0]);
@@ -98,6 +104,7 @@ export function BriefForm() {
         },
         { token: client ? getToken() : null },
       );
+      if (onSubmitted) return onSubmitted(res.reference);
       setSent(res.reference);
     } catch (err) {
       setError(

@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { PortalFrame } from "@/components/portal-frame";
 import { PortalSignIn } from "@/components/portal-signin";
 import { getToken } from "@/lib/portal";
 
@@ -22,12 +21,8 @@ export default function PortalSignInPage() {
   }, [router]);
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-12">
-        <PortalSignIn onSignedIn={() => router.push(DASHBOARD)} />
-      </main>
-      <SiteFooter />
-    </>
+    <PortalFrame>
+      <PortalSignIn onSignedIn={() => router.push(DASHBOARD)} />
+    </PortalFrame>
   );
 }

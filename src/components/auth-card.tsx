@@ -1,23 +1,16 @@
 import type { ReactNode } from "react";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { PortalFrame } from "@/components/portal-frame";
 
-/** The page frame every client account screen shares: public header, one centred card, footer. */
+/** One centred card inside the portal's own frame — see PortalFrame for why not the site header. */
 export function AuthCard({ title, intro, children, wide = false }: { title: string; intro?: ReactNode; children: ReactNode; wide?: boolean }) {
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto px-4 py-12">
-        <div className={`mx-auto ${wide ? "max-w-xl" : "max-w-md"}`}>
-          <div className="rounded-xl border border-line bg-surface p-7">
-            <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink">{title}</h1>
-            {intro && <div className="mt-2 text-sm leading-relaxed text-ink-4">{intro}</div>}
-            <div className="mt-6">{children}</div>
-          </div>
-        </div>
-      </main>
-      <SiteFooter />
-    </>
+    <PortalFrame wide={wide}>
+      <div className="rounded-xl border border-line bg-surface p-7">
+        <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink">{title}</h1>
+        {intro && <div className="mt-2 text-sm leading-relaxed text-ink-4">{intro}</div>}
+        <div className="mt-6">{children}</div>
+      </div>
+    </PortalFrame>
   );
 }
 

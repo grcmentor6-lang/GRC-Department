@@ -90,6 +90,17 @@ export function PortalDashboard({
   const go = (v: ClientView, project?: string) =>
     router.push(v === "overview" ? BASE : `${BASE}?view=${v}${project ? `&engagement=${project}` : ""}`);
 
+  // What a request that was just submitted said, shown on the Requests view it lands in. Held
+  // here rather than in the form, which unmounts the moment the request is accepted.
+  const [justSent, setJustSent] = useState<string | null>(null);
+
+  const submitted = async (reference: string) => {
+    setJustSent(reference);
+    // Without this the new request is missing from the list until the client reloads the page.
+    await onRefresh();
+    go("requests");
+  };
+
   const [openId, setOpenId] = useState<string | null>(
     () =>
       (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("engagement")) ||
@@ -278,6 +289,26 @@ export function PortalDashboard({
         </div>
       )}
 
+      {view === "requests" && justSent && (
+        <div className="mb-5 rounded-xl border border-positive-line bg-positive-tint p-5">
+          <h2 className="font-semibold text-ink">Request received — {justSent}</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-3">
+            We have emailed you a confirmation. A GRC lead replies within one business day with a scoped
+            proposal, or with the questions that decide it. Quote {justSent} if you write to us.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setJustSent(null);
+              go("new");
+            }}
+            className="focus-ring mt-4 rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken"
+          >
+            Raise another request
+          </button>
+        </div>
+      )}
+
       {view === "requests" &&
         (portal.requests.length === 0 ? (
           <div className="rounded-xl border border-line bg-surface p-8">
@@ -371,7 +402,7 @@ export function PortalDashboard({
             ))}
           </ul>
         ))}
-      {view === "new" && <PortalNewRequest />}
+      {view === "new" && <PortalNewRequest onSubmitted={submitted} />}
 
       {view === "team" && <PortalTeam />}
 

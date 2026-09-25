@@ -165,7 +165,8 @@ export function SiteHeader() {
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  // Signed in, "Client portal" means the portal itself, not its sign-in page.
+                  href={signedIn && item.href === "/portal" ? "/portal/dashboard" : item.href}
                   aria-current={active ? "page" : undefined}
                   className={`hidden sm:block ${navClass(active)}`}
                 >
