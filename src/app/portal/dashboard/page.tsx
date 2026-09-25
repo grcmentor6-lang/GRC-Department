@@ -78,7 +78,16 @@ function Dashboard() {
   }
   if (!contact || !portal) return <Loading />;
 
-  return <PortalDashboard contact={contact} portal={portal} view={view} onRefresh={load} onSignOut={leave} />;
+  return (
+    <PortalDashboard
+      contact={contact}
+      portal={portal}
+      view={view}
+      onRefresh={load}
+      onSignOut={leave}
+      onContactChange={setContact}
+    />
+  );
 }
 
 export default function PortalDashboardPage() {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CONSULTANTS_ENABLED } from "@/lib/flags";
+import { isSignedIn } from "@/lib/portal";
 import { Wordmark } from "./wordmark";
 
 type NavItem = {
@@ -88,6 +89,14 @@ function useSectionInView(enabled: boolean): string | null {
 export function SiteHeader() {
   const pathname = usePathname() ?? "/";
   const section = useSectionInView(pathname === "/");
+  // Read after mount, never during render: the server has no session to look at, and rendering
+  // one state then another would be a hydration mismatch.
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    (async () => {
+      setSignedIn(isSignedIn());
+    })();
+  }, [pathname]);
 
   const isActive = (item: NavItem) =>
     item.section
@@ -164,6 +173,7 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+            {!signedIn && (
             <Link
               href={CREATE_ACCOUNT.href}
               aria-current={isActive(CREATE_ACCOUNT) ? "page" : undefined}
@@ -175,6 +185,7 @@ export function SiteHeader() {
             >
               {CREATE_ACCOUNT.label}
             </Link>
+            )}
             <Link
               href="/brief"
               aria-current={owns(pathname, "/brief") ? "page" : undefined}

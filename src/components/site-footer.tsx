@@ -10,6 +10,8 @@ const CLIENTS = {
     { href: "/portal/signup", label: "Create an account" },
     { href: "/portal", label: "Client portal" },
     { href: "/#engagement-models", label: "Engagement models" },
+    { href: "/terms", label: "Terms of use" },
+    { href: "/privacy", label: "Privacy notice" },
     ...(CONSULTANTS_ENABLED
       ? [
           { href: "/talent", label: "Browse talent" },

@@ -19,6 +19,7 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
   const [error, setError] = useState<string | null>(null);
   const [unconfirmed, setUnconfirmed] = useState(false);
   const [resent, setResent] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,13 +28,16 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
     setUnconfirmed(false);
     setResent(false);
     try {
-      onSignedIn(await login(email, password));
+      onSignedIn(await login(email, password, remember));
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setUnconfirmed(true);
         setError(err.message);
       } else if (err instanceof ApiError && err.status === 401) {
-        setError("That email and password do not match a client account.");
+        setError(
+          "That email and password do not match a client account. If you opened your account with " +
+            "Slack, use the Slack button below — accounts made that way have no password until you set one.",
+        );
       } else if (err instanceof ApiError && err.status === 429) {
         setError("Too many attempts. Wait a minute and try again.");
       } else {
@@ -103,6 +107,11 @@ export function PortalSignIn({ onSignedIn }: { onSignedIn: (c: Contact) => void 
                 ))}
             </div>
           )}
+
+          <label className="flex items-center gap-2 text-sm text-ink-4">
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            Keep me signed in on this device
+          </label>
 
           <button
             type="submit"

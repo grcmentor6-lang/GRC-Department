@@ -14,22 +14,32 @@ import { apiGet, apiPost, BASE_URL } from "./api";
  */
 const KEY = "gd_client_token";
 
+/**
+ * Where the session lives. sessionStorage by default, so closing the tab ends it; localStorage
+ * when the client asked to be remembered, because a buyer who checks in daily should not sign in
+ * daily. Both are readable by any injected script, which is why the token is short-lived either
+ * way — see the note at the top of this file.
+ */
 export function getToken(): string | null {
   try {
-    return sessionStorage.getItem(KEY);
+    return sessionStorage.getItem(KEY) ?? localStorage.getItem(KEY);
   } catch {
     return null;
   }
 }
 
-export function setToken(token: string | null) {
+export function setToken(token: string | null, remember = false) {
   try {
-    if (token) sessionStorage.setItem(KEY, token);
-    else sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem(KEY);
+    localStorage.removeItem(KEY);
+    if (token) (remember ? localStorage : sessionStorage).setItem(KEY, token);
   } catch {
-    /* private mode — the session simply does not persist across a reload */
+    /* private mode — the session simply does not persist */
   }
 }
+
+/** Whether somebody is signed in, for surfaces that only need to know that much. */
+export const isSignedIn = () => getToken() !== null;
 
 function auth(): RequestInit {
   const t = getToken();
@@ -38,6 +48,8 @@ function auth(): RequestInit {
 
 export interface Contact {
   id: string;
+  /** False for an account opened through Slack: offer "set a password", not "change". */
+  has_password?: boolean;
   name: string;
   email: string;
   job_title: string | null;
@@ -169,12 +181,12 @@ export async function resetPassword(token: string, password: string): Promise<Co
   return res.contact;
 }
 
-export async function login(email: string, password: string): Promise<Contact> {
+export async function login(email: string, password: string, remember = false): Promise<Contact> {
   const res = await apiPost<{ access_token: string; contact: Contact }>("/gd/client/login", {
     email,
     password,
   });
-  setToken(res.access_token);
+  setToken(res.access_token, remember);
   return res.contact;
 }
 
@@ -220,6 +232,56 @@ export async function sessionFromHandoff(token: string): Promise<Contact> {
   setToken(res.access_token);
   return res.contact;
 }
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  job_title: string | null;
+  is_you: boolean;
+  joined: string;
+  confirmed: boolean;
+}
+
+export const getTeam = () => apiGet<{ members: TeamMember[] }>("/gd/client/team", { ...auth(), cache: "no-store" });
+
+export const inviteColleague = (email: string) =>
+  apiPost<{ message: string; already_member: boolean }>("/gd/client/team/invite", { email }, { token: getToken() ?? undefined });
+
+export async function acceptInvite(input: {
+  token: string;
+  name: string;
+  job_title?: string;
+  password: string;
+}): Promise<Contact> {
+  const res = await apiPost<{ access_token: string; contact: Contact }>("/gd/client/team/accept", input);
+  setToken(res.access_token);
+  return res.contact;
+}
+
+/** Update your own details and your organisation's. Only the fields you pass are changed. */
+export async function updateProfile(patch: {
+  name?: string;
+  job_title?: string;
+  company?: string;
+  business_region?: string;
+}): Promise<Contact> {
+  const t = getToken();
+  const res = await fetch(`${BASE_URL}/gd/client/me`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json", ...(t ? { Authorization: `Bearer ${t}` } : {}) },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Could not save your changes.");
+  return (await res.json()) as Contact;
+}
+
+export const changePassword = (newPassword: string, currentPassword?: string) =>
+  apiPost<{ message: string }>(
+    "/gd/client/password/change",
+    { new_password: newPassword, current_password: currentPassword ?? null },
+    { token: getToken() ?? undefined },
+  );
 
 export const getChatPlatforms = () =>
   apiGet<{ platforms: ChatPlatform[] }>("/gd/client/chat", { ...auth(), cache: "no-store" });

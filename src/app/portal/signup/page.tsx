@@ -188,6 +188,18 @@ export default function SignupPage() {
 
       <SignUpWith />
 
+      <p className="mt-5 text-xs leading-relaxed text-ink-5">
+        Creating an account means you accept our{" "}
+        <Link href="/terms" className="focus-ring rounded text-accent underline underline-offset-4">
+          terms of use
+        </Link>{" "}
+        and our{" "}
+        <Link href="/privacy" className="focus-ring rounded text-accent underline underline-offset-4">
+          privacy notice
+        </Link>
+        .
+      </p>
+
       <p className="mt-6 border-t border-line pt-4 text-sm text-ink-5">
         Already have an account?{" "}
         <Link href="/portal" className="focus-ring rounded font-semibold text-accent hover:text-accent-dark">

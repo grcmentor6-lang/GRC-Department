@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ChatConnections } from "./chat-connections";
+import { PortalNewRequest } from "./portal-new-request";
+import { PortalSettings } from "./portal-settings";
+import { PortalTeam } from "./portal-team";
 import { PortalShell, type ShellNavItem } from "@/components/portal-shell";
 import {
   acceptDeliverable,
@@ -21,14 +23,26 @@ const STAGE_TONE: Record<string, string> = {
   Scoping: "border-line-strong bg-muted text-ink-3",
 };
 
-export type ClientView = "overview" | "requests" | "engagements" | "timesheets" | "activity" | "connections";
+export type ClientView =
+  | "overview"
+  | "new"
+  | "requests"
+  | "engagements"
+  | "timesheets"
+  | "activity"
+  | "team"
+  | "connections"
+  | "settings";
 export const CLIENT_VIEWS: ClientView[] = [
   "overview",
+  "new",
   "requests",
   "engagements",
   "timesheets",
   "activity",
+  "team",
   "connections",
+  "settings",
 ];
 
 const BASE = "/portal/dashboard";
@@ -42,7 +56,10 @@ const TITLES: Record<ClientView, string> = {
   engagements: "Engagements",
   timesheets: "Timesheets",
   activity: "Activity",
+  new: "New request",
+  team: "Your team",
   connections: "Slack & Teams",
+  settings: "Settings",
 };
 
 const initials = (name: string) =>
@@ -60,12 +77,14 @@ export function PortalDashboard({
   view,
   onRefresh,
   onSignOut,
+  onContactChange,
 }: {
   contact: Contact;
   portal: Portal;
   view: ClientView;
   onRefresh: () => Promise<void>;
   onSignOut: () => void;
+  onContactChange: (c: Contact) => void;
 }) {
   const router = useRouter();
   const go = (v: ClientView, project?: string) =>
@@ -82,11 +101,14 @@ export function PortalDashboard({
 
   const nav: ShellNavItem[] = [
     { key: "overview", label: "Overview", icon: "overview" },
+    { key: "new", label: "New request", icon: "tasks" },
     { key: "requests", label: "Requests", icon: "tasks", badge: portal.stats.requests_in_flight },
     { key: "engagements", label: "Engagements", icon: "briefcase", badge: portal.stats.deliverables_outstanding },
     { key: "timesheets", label: "Timesheets", icon: "timesheet", badge: portal.stats.timesheets_to_approve },
     { key: "activity", label: "Activity", icon: "activity" },
+    { key: "team", label: "Your team", icon: "user" },
     { key: "connections", label: "Slack & Teams", icon: "chat" },
+    { key: "settings", label: "Settings", icon: "clock" },
   ];
 
   const stats: [string, number, boolean][] = [
@@ -125,12 +147,13 @@ export function PortalDashboard({
         Once a proposal is accepted it appears here with its milestones, deliverables and the consultant
         assigned.
       </p>
-      <Link
-        href="/services"
+      <button
+        type="button"
+        onClick={() => go("new")}
         className="focus-ring mt-4 inline-block rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
       >
-        Browse the service catalogue
-      </Link>
+        Start a request
+      </button>
     </div>
   );
 
@@ -145,12 +168,13 @@ export function PortalDashboard({
       user={{ name: contact.name, initials: initials(contact.name), detail: contact.job_title ?? contact.email }}
       onSignOut={onSignOut}
       actions={
-        <Link
-          href="/services"
+        <button
+          type="button"
+          onClick={() => go("new")}
           className="focus-ring rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
         >
-          Request a service
-        </Link>
+          New request
+        </button>
       }
     >
       {view === "overview" && (
@@ -178,11 +202,15 @@ export function PortalDashboard({
             {portal.requests.length === 0 ? (
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <p className="text-sm leading-relaxed text-ink-5">
-                  No requests yet. Pick services from the catalogue, or describe what you need in a brief.
+                  No requests yet. Describe what you need, or pick the services you want scoped.
                 </p>
-                <Link href="/brief" className="focus-ring rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sunken">
-                  Submit a brief
-                </Link>
+                <button
+                  type="button"
+                  onClick={() => go("new")}
+                  className="focus-ring rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-sm font-semibold text-ink hover:bg-sunken"
+                >
+                  New request
+                </button>
               </div>
             ) : (
               requestList(portal.requests.slice(0, 3))
@@ -259,12 +287,20 @@ export function PortalDashboard({
               where they stand. Each one gets a written reply within one business day.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="/services" className="focus-ring rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
-                Browse the catalogue
-              </Link>
-              <Link href="/brief" className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken">
-                Submit a brief
-              </Link>
+              <button
+                type="button"
+                onClick={() => go("new")}
+                className="focus-ring rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark"
+              >
+                New request
+              </button>
+              <button
+                type="button"
+                onClick={() => go("team")}
+                className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-ink hover:bg-sunken"
+              >
+                Invite a colleague
+              </button>
             </div>
           </div>
         ) : (
@@ -335,6 +371,12 @@ export function PortalDashboard({
             ))}
           </ul>
         ))}
+      {view === "new" && <PortalNewRequest />}
+
+      {view === "team" && <PortalTeam />}
+
+      {view === "settings" && <PortalSettings contact={contact} onSaved={onContactChange} />}
+
       {view === "connections" && <ChatConnections />}
 
     </PortalShell>
