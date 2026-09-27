@@ -44,7 +44,7 @@ const SECTIONS: { h: string; p: string[] }[] = [
     p: [
       "Our hosting and database providers, who store the service and its data on our behalf.",
       "Our email provider, which delivers confirmation, notification and engagement email.",
-      "Slack or Microsoft, if you choose to connect a workspace, to the extent needed to create your channel and post the updates you have asked for.",
+      "Slack, if you choose to connect a workspace, to the extent needed to create your channel and post the updates you have asked for.",
       "The consultant assigned to your engagement, and the GRC lead scoping it, see what is needed to do the work.",
       "We do not share your data with anyone else unless the law requires it or you ask us to.",
     ],
