@@ -7,7 +7,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/portal/", "/consultant-portal", "/scoping"],
+      // /ops is our own queue. Keeping it out of search is tidiness, not security — the API
+      // refuses anything without an admin token, so the URL alone buys you a login form.
+      disallow: ["/portal/", "/consultant-portal", "/scoping", "/ops"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

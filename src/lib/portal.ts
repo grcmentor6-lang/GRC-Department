@@ -196,6 +196,26 @@ export const getPortal = () =>
   apiGet<Portal>("/gd/client/portal", { ...auth(), cache: "no-store" });
 
 /** A chat platform this organisation could connect, and whether it has. Never carries a token. */
+export interface RequestNote {
+  side: "client" | "grc";
+  author: string;
+  body: string;
+  at: string;
+}
+
+export const getRequest = (id: string) =>
+  apiGet<{ id: string; reference: string; kind: string; status: string; created_at: string; thread: RequestNote[] }>(
+    `/gd/client/requests/${id}`,
+    { ...auth(), cache: "no-store" },
+  );
+
+export const replyToRequest = (id: string, body: string) =>
+  apiPost<{ ok: boolean }>(`/gd/client/requests/${id}/reply`, { body }, { token: getToken() ?? undefined });
+
+/** Accept a proposal, or withdraw a request. The only two a client may set. */
+export const setRequestStatus = (id: string, status: "accepted" | "withdrawn") =>
+  apiPost<{ status: string }>(`/gd/client/requests/${id}/status`, { status }, { token: getToken() ?? undefined });
+
 export interface ChatChannel {
   id: string;
   name: string;

@@ -6,6 +6,7 @@ import { ChatConnections } from "./chat-connections";
 import { PortalNewRequest } from "./portal-new-request";
 import { PortalSettings } from "./portal-settings";
 import { PortalTeam } from "./portal-team";
+import { RequestThread } from "./request-thread";
 import { PortalShell, type ShellNavItem } from "@/components/portal-shell";
 import {
   acceptDeliverable,
@@ -49,7 +50,14 @@ const BASE = "/portal/dashboard";
 
 const KIND_LABEL: Record<string, string> = { brief: "Engagement brief", scoping: "Scoping request" };
 // What a client should read for each queue state; "new" means a GRC lead has not replied yet.
-const REQUEST_STATUS: Record<string, string> = { new: "Awaiting proposal", proposal: "Proposal sent", accepted: "Accepted" };
+const REQUEST_STATUS: Record<string, string> = {
+  new: "Awaiting proposal",
+  reviewing: "Being scoped",
+  proposal: "Proposal sent",
+  accepted: "Accepted",
+  declined: "Declined",
+  withdrawn: "Withdrawn",
+};
 const TITLES: Record<ClientView, string> = {
   overview: "Overview",
   requests: "Requests",
@@ -93,6 +101,9 @@ export function PortalDashboard({
   // What a request that was just submitted said, shown on the Requests view it lands in. Held
   // here rather than in the form, which unmounts the moment the request is accepted.
   const [justSent, setJustSent] = useState<string | null>(null);
+  // Which request's conversation is open. One at a time: the list is the point, the thread is
+  // what you came for once you found the row.
+  const [openRequest, setOpenRequest] = useState<string | null>(null);
 
   const submitted = async (reference: string) => {
     setJustSent(reference);
@@ -129,25 +140,43 @@ export function PortalDashboard({
     ["Timesheets to approve", portal.stats.timesheets_to_approve, portal.stats.timesheets_to_approve > 0],
   ];
 
-  const requestList = (items: Portal["requests"]) => (
+  const requestList = (items: Portal["requests"], expandable = false) => (
     <ul className="divide-y divide-line">
-      {items.map((r) => (
-        <li key={r.id} className="flex flex-wrap items-start gap-3 py-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs text-ink-5">{r.reference}</span>
-              <span className="text-sm font-medium text-ink">{KIND_LABEL[r.kind] ?? "Request"}</span>
+      {items.map((r) => {
+        const open = openRequest === r.id;
+        return (
+          <li key={r.id} className="py-3">
+            <div className="flex flex-wrap items-start gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-xs text-ink-5">{r.reference}</span>
+                  <span className="text-sm font-medium text-ink">{KIND_LABEL[r.kind] ?? "Request"}</span>
+                </div>
+                {r.services.length > 0 && (
+                  <p className="mt-1 text-sm text-ink-4">{r.services.map((s) => s.name).join(" · ")}</p>
+                )}
+                <p className="mt-0.5 text-xs text-ink-5">Submitted {fmtDate(r.created_at)}</p>
+              </div>
+              <span className="shrink-0 rounded border border-accent bg-accent-tint px-2 py-0.5 text-xs text-accent">
+                {REQUEST_STATUS[r.status] ?? r.status}
+              </span>
+              {expandable && (
+                <button
+                  type="button"
+                  onClick={() => setOpenRequest(open ? null : r.id)}
+                  aria-expanded={open}
+                  className="focus-ring shrink-0 rounded-lg border border-line-strong px-3 py-1 text-xs font-semibold text-ink-2 hover:border-rule"
+                >
+                  {open ? "Close" : "Open"}
+                </button>
+              )}
             </div>
-            {r.services.length > 0 && (
-              <p className="mt-1 text-sm text-ink-4">{r.services.map((s) => s.name).join(" · ")}</p>
+            {expandable && open && (
+              <RequestThread id={r.id} reference={r.reference} status={r.status} onChanged={onRefresh} />
             )}
-            <p className="mt-0.5 text-xs text-ink-5">Submitted {fmtDate(r.created_at)}</p>
-          </div>
-          <span className="shrink-0 rounded border border-accent bg-accent-tint px-2 py-0.5 text-xs text-accent">
-            {REQUEST_STATUS[r.status] ?? r.status}
-          </span>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 
@@ -335,7 +364,9 @@ export function PortalDashboard({
             </div>
           </div>
         ) : (
-          <section className="rounded-xl border border-line bg-surface p-5">{requestList(portal.requests)}</section>
+          <section className="rounded-xl border border-line bg-surface p-5">
+            {requestList(portal.requests, true)}
+          </section>
         ))}
 
       {view === "engagements" &&
