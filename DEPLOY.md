@@ -29,7 +29,7 @@ as root, so it should not come back.
 
 ## Environment
 
-`.env.local` on the server, from `.env.example`. Every `NEXT_PUBLIC_` value is **inlined into the
+`.env.production` on the server, from `.env.example` (`.env.local` also works and wins where both set the same key). Every `NEXT_PUBLIC_` value is **inlined into the
 bundle at build time** — changing one needs a rebuild, not a restart.
 
 ```dotenv
@@ -50,3 +50,26 @@ browser.
   `GD_TEAM_EMAIL`.
 - `/ops` — the internal queue, its own sign-in, not linked from anywhere.
 - `/portal/*` — 404 while `NEXT_PUBLIC_PORTAL_ENABLED` is off.
+
+## The build worked but the site did not change
+
+nginx only proxies to the Node process on port 3001. That process serves the build it booted
+with, so a rebuild needs **the app** restarted, not nginx:
+
+```bash
+pm2 list                                    # if pm2 runs it
+ss -lntp | grep 3001                         # otherwise, find what is listening
+systemctl list-units --type=service | grep -iE "grc|next|department"
+```
+
+Then `pm2 restart <name>` or `sudo systemctl restart <name>`. `systemctl reload nginx` will
+never pick up a new build.
+
+## Never build with sudo
+
+`sudo npm run build` leaves a root-owned `.next` and a root-owned `.git`, and the next ordinary
+build and `git pull` both fail. If it has happened:
+
+```bash
+sudo chown -R secureitlab:secureitlab /var/www/grc-department-frontend/GRC-Department
+```

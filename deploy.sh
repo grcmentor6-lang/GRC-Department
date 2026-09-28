@@ -22,9 +22,11 @@ if [ -d .next ] && ! rm -rf .next 2>/dev/null; then
   exit 1
 fi
 
-if [ ! -f .env.local ]; then
-  echo "No .env.local — NEXT_PUBLIC_* values are baked in at build time, so the site would" >&2
-  echo "ship pointing at localhost. Copy .env.example and fill it in first." >&2
+# Either file works: Next reads .env.production for a production build, and .env.local on top of
+# it. This server uses .env.production.
+if [ ! -f .env.production ] && [ ! -f .env.local ]; then
+  echo "No .env.production or .env.local — NEXT_PUBLIC_* values are baked in at build time, so" >&2
+  echo "the site would ship pointing at localhost. Copy .env.example to .env.production first." >&2
   exit 1
 fi
 
@@ -32,11 +34,15 @@ git pull --ff-only
 npm ci
 npm run build
 
-# Whatever keeps `npm start` alive. pm2 if it is installed; otherwise say so rather than
-# leaving a fresh build unserved and looking like nothing happened.
+# A build on disk changes nothing until the Node process that serves it restarts. Reloading
+# nginx is not that: nginx only proxies to port 3001, and the app there keeps serving the build
+# it booted with — which looks exactly like a deploy that silently did nothing.
 if command -v pm2 >/dev/null 2>&1 && pm2 describe grc-department >/dev/null 2>&1; then
   pm2 reload grc-department --update-env
   echo "Built and reloaded."
 else
-  echo "Built. Now restart whatever serves it, e.g.:  sudo systemctl restart grc-department"
+  echo
+  echo "Built — but NOT yet being served. Restart the app process, not nginx:"
+  echo "    pm2 restart <name>            # if pm2 runs it:  pm2 list"
+  echo "    sudo systemctl restart <name> # if systemd does: ss -lntp | grep 3001"
 fi
