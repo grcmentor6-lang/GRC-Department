@@ -307,15 +307,32 @@ export interface TeamMember {
   name: string;
   email: string;
   job_title: string | null;
+  /** What they are here to do, so a request reaches the right person. */
+  role: string;
+  role_label: string;
   is_you: boolean;
   joined: string;
   confirmed: boolean;
 }
 
-export const getTeam = () => apiGet<{ members: TeamMember[] }>("/gd/client/team", { ...auth(), cache: "no-store" });
+export interface Team {
+  members: TeamMember[];
+  /** Only an administrator adds a colleague or changes what somebody is. */
+  you_are_admin: boolean;
+  roles: { value: string; label: string }[];
+}
 
-export const inviteColleague = (email: string) =>
-  apiPost<{ message: string; already_member: boolean }>("/gd/client/team/invite", { email }, { token: getToken() ?? undefined });
+export const getTeam = () => apiGet<Team>("/gd/client/team", { ...auth(), cache: "no-store" });
+
+export const inviteColleague = (email: string, role: string) =>
+  apiPost<{ message: string; already_member: boolean }>(
+    "/gd/client/team/invite",
+    { email, role },
+    { token: getToken() ?? undefined },
+  );
+
+export const setMemberRole = (personId: string, role: string) =>
+  apiPost<{ role: string; role_label: string }>(`/gd/client/team/${personId}/role`, { role }, { token: getToken() ?? undefined });
 
 export async function acceptInvite(input: {
   token: string;

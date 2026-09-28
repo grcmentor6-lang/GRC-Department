@@ -39,6 +39,8 @@ const REASONS: Record<string, string> = {
   invalid_client_id: "Slack does not recognise our app. Tell us and we will fix it.",
   access_denied: "The authorisation was cancelled, so nothing changed.",
   unreachable: "We could not reach Slack. Try again in a moment.",
+  ask_your_admin:
+    "Your workspace already has a GRC Department account. Ask whoever set it up to add you — they can do that from the portal, and you will get an invitation by email.",
 };
 
 function Outcome() {
