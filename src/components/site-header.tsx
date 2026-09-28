@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CONSULTANTS_ENABLED } from "@/lib/flags";
+import { CONSULTANTS_ENABLED, PORTAL_ENABLED } from "@/lib/flags";
 import { isSignedIn } from "@/lib/portal";
 import { Wordmark } from "./wordmark";
 
@@ -36,11 +36,13 @@ const NAV: NavItem[] = CONSULTANTS_ENABLED
 
 const PORTALS: NavItem[] = [
   ...(CONSULTANTS_ENABLED ? [{ href: "/consultant-portal", label: "Consultant portal", match: ["/consultant-portal"] }] : []),
-  { href: "/portal", label: "Client portal", match: ["/portal"], except: ["/portal/signup"] },
+  ...(PORTAL_ENABLED ? [{ href: "/portal", label: "Client portal", match: ["/portal"], except: ["/portal/signup"] }] : []),
 ];
 
 /** Sign-up is its own call to action, not a portal link: it is what a first-time visitor needs. */
-const CREATE_ACCOUNT: NavItem = { href: "/portal/signup", label: "Create account", match: ["/portal/signup"] };
+const CREATE_ACCOUNT: NavItem | null = PORTAL_ENABLED
+  ? { href: "/portal/signup", label: "Create account", match: ["/portal/signup"] }
+  : null;
 
 const HOME_SECTIONS = NAV.flatMap((n) => (n.section ? [n.section] : []));
 
@@ -174,7 +176,7 @@ export function SiteHeader() {
                 </Link>
               );
             })}
-            {!signedIn && (
+            {CREATE_ACCOUNT && !signedIn && (
             <Link
               href={CREATE_ACCOUNT.href}
               aria-current={isActive(CREATE_ACCOUNT) ? "page" : undefined}
@@ -202,7 +204,7 @@ export function SiteHeader() {
                 Menu
               </summary>
               <nav aria-label="Main" className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-surface p-2 shadow-lg">
-                {[...NAV, ...PORTALS, CREATE_ACCOUNT].map((item) => {
+                {[...NAV, ...PORTALS, ...(CREATE_ACCOUNT ? [CREATE_ACCOUNT] : [])].map((item) => {
                   const active = isActive(item);
                   return (
                     <Link

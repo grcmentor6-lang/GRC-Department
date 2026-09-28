@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getCatalogue } from "@/lib/catalogue";
 import { getDirectoryPreview, type ConsultantCard } from "@/lib/consultants";
-import { CONSULTANTS_ENABLED } from "@/lib/flags";
+import { CONSULTANTS_ENABLED, PORTAL_ENABLED } from "@/lib/flags";
 
 const FRAMEWORKS = [
   "SOC 2",
@@ -465,7 +465,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Client portal */}
+        {/* Client portal — hidden while the portal is off; a pitch for a page that 404s
+            is worse than no pitch, and a brief is the whole of the product until then. */}
+        {PORTAL_ENABLED && (
         <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 lg:grid-cols-2 lg:items-center">
           <div>
             <Eyebrow>Client portal</Eyebrow>
@@ -503,6 +505,7 @@ export default async function HomePage() {
             ))}
           </ul>
         </section>
+        )}
 
         {/* Vetting — the grcmentor.ai listing route, so only with the consultant side on */}
         {CONSULTANTS_ENABLED && (

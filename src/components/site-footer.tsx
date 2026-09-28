@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CONSULTANTS_ENABLED } from "@/lib/flags";
+import { CONSULTANTS_ENABLED, PORTAL_ENABLED } from "@/lib/flags";
 import { Wordmark } from "./wordmark";
 
 const CLIENTS = {
@@ -7,8 +7,12 @@ const CLIENTS = {
   links: [
     { href: "/brief", label: "Submit a brief" },
     { href: "/services", label: "Service catalogue" },
-    { href: "/portal/signup", label: "Create an account" },
-    { href: "/portal", label: "Client portal" },
+    ...(PORTAL_ENABLED
+      ? [
+          { href: "/portal/signup", label: "Create an account" },
+          { href: "/portal", label: "Client portal" },
+        ]
+      : []),
     { href: "/#engagement-models", label: "Engagement models" },
     { href: "/terms", label: "Terms of use" },
     { href: "/privacy", label: "Privacy notice" },

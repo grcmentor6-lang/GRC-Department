@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiPost, ApiError } from "@/lib/api";
+import { PORTAL_ENABLED } from "@/lib/flags";
 import { getToken } from "@/lib/portal";
 import { useClientSession } from "@/components/use-client-session";
 import { ChoiceCards, Field, Submitted, inputClass, selectClass } from "@/components/form-bits";
@@ -68,7 +69,7 @@ export function BriefForm({ onSubmitted }: { onSubmitted?: (reference: string) =
         >
           Submit another brief
         </button>
-        {client && (
+        {client && PORTAL_ENABLED && (
           <Link
             href="/portal/dashboard?view=requests"
             className="focus-ring rounded-lg border border-line-strong bg-surface px-4 py-2.5 font-semibold text-ink hover:bg-sunken"

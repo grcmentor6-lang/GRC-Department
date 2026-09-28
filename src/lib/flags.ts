@@ -10,5 +10,14 @@
  */
 export const CONSULTANTS_ENABLED = process.env.NEXT_PUBLIC_CONSULTANTS_ENABLED === "1";
 
+/**
+ * PORTAL_ENABLED — the client portal: creating an account, signing in, and everything behind it
+ * (dashboard, requests, team, Slack). Off for launch: a visitor sends a brief and we answer it by
+ * email, which is the whole of the product until there is a reason to hold accounts. While it is
+ * off every /portal page is a 404 and nothing links to one. The API behind it stays open, so
+ * turning this on is one variable and a redeploy — no accounts are lost while it is off.
+ */
+export const PORTAL_ENABLED = process.env.NEXT_PUBLIC_PORTAL_ENABLED === "1";
+
 /** Public origin, for absolute URLs in metadata. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://grcdepartment.com").replace(/\/$/, "");
