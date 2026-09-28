@@ -39,10 +39,10 @@ NEXT_PUBLIC_PORTAL_ENABLED=0
 NEXT_PUBLIC_CONSULTANTS_ENABLED=0
 ```
 
-`api.grcmentor.ai` is on the same box and was returning 502 on 2026-09-28 — nginx up, nothing
-behind it. While that is true, point `NEXT_PUBLIC_API_BASE_URL` at the Render service
-(`https://grc-backend-8smp.onrender.com`) instead, or every brief submission fails in the
-browser.
+`api.grcmentor.ai` is the production API, on this same box. The Render service
+(`https://grc-backend-8smp.onrender.com`) runs the same code and is the fallback while that one
+is down — it 502'd for part of 2026-09-28, nginx up with nothing behind it, which is worth
+checking first if every form on the site starts failing at once.
 
 ## What is live
 
