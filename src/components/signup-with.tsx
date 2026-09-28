@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSignupPlatforms, lastKnownPlatforms, signupWithUrl, type SignupPlatform } from "@/lib/portal";
+import {
+  getSignupPlatforms,
+  lastKnownPlatforms,
+  signupAuthorizeUrl,
+  signupWithUrl,
+  type SignupPlatform,
+} from "@/lib/portal";
 
 /**
  * "Sign up with Slack", under the email form on both account pages.
@@ -82,6 +88,28 @@ const LOGOS: Record<string, React.ReactNode> = {
 export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" }) {
   const [platforms, setPlatforms] = useState<Platform[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [opening, setOpening] = useState<string | null>(null);
+  const [slow, setSlow] = useState(false);
+
+  /**
+   * Fetch the destination first, then go. The link's href is the same journey without
+   * JavaScript, so this only ever improves on it — and it keeps a waking API's own holding page
+   * off the client's screen.
+   */
+  const open = async (e: React.MouseEvent<HTMLAnchorElement>, platform: string) => {
+    e.preventDefault();
+    setOpening(platform);
+    setSlow(false);
+    const tell = setTimeout(() => setSlow(true), 2500);
+    try {
+      window.location.assign((await signupAuthorizeUrl(platform)).url);
+    } catch {
+      // Could not reach us at all: fall back to the plain link rather than stranding them.
+      window.location.assign(signupWithUrl(platform));
+    } finally {
+      clearTimeout(tell);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -121,10 +149,14 @@ export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" 
             <a
               key={p.platform}
               href={signupWithUrl(p.platform)}
-              className="focus-ring flex items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sunken"
+              onClick={(e) => void open(e, p.platform)}
+              aria-disabled={opening !== null}
+              className={`focus-ring flex items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:bg-sunken ${
+                opening !== null ? "pointer-events-none opacity-70" : ""
+              }`}
             >
               {LOGOS[p.platform]}
-              {verb} with {p.label}
+              {opening === p.platform ? `Opening ${p.label}…` : `${verb} with ${p.label}`}
             </a>
           ) : (
             <span
@@ -140,6 +172,12 @@ export function SignUpWith({ verb = "Sign up" }: { verb?: "Sign up" | "Sign in" 
           ),
         )}
       </div>
+
+      {slow && (
+        <p className="mt-3 text-center text-xs text-ink-4" role="status">
+          Still opening — our server was asleep and is waking up. This takes a few seconds.
+        </p>
+      )}
 
       <p className="mt-3 text-center text-xs leading-relaxed text-ink-5">
         Approving this adds GRC Department to your workspace and creates a channel for your

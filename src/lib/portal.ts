@@ -282,8 +282,18 @@ export function lastKnownPlatforms(): SignupPlatform[] | null {
   }
 }
 
-/** Where a "Sign up with …" button sends the browser. A redirect, not a fetch. */
+/**
+ * Where a "Sign up with …" button sends the browser.
+ *
+ * `signupWithUrl` is the plain link, kept as the fallback for a click we cannot intercept. The
+ * button prefers `signupAuthorizeUrl`, which asks for the same destination as JSON: the API
+ * sleeps when idle, and a plain link means the browser leaves our site immediately and sits on
+ * the hosting provider's "service waking up" page instead of ours.
+ */
 export const signupWithUrl = (platform: string) => `${BASE_URL}/gd/client/chat/${platform}/signup`;
+
+export const signupAuthorizeUrl = (platform: string) =>
+  apiGet<{ url: string }>(`/gd/client/chat/${platform}/signup-url`, { cache: "no-store" });
 
 /** Trade the token in the return URL for a session, the way a confirmation link does. */
 export async function sessionFromHandoff(token: string): Promise<Contact> {
