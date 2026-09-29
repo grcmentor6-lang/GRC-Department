@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CONSULTANTS_ENABLED, PORTAL_ENABLED } from "@/lib/flags";
 import { Wordmark } from "./wordmark";
@@ -35,7 +36,16 @@ const CONSULTANTS = {
   ],
 };
 
-const COLUMNS = CONSULTANTS_ENABLED ? [CLIENTS, CONSULTANTS] : [CLIENTS];
+// Artwork is white-on-transparent (lifted from vaptfix.ai's dark footer), hence `invert` below.
+const CERTS = [
+  { src: "/certs/soc2.png", alt: "AICPA SOC for Cloud Services certified" },
+  { src: "/certs/iso27001.png", alt: "ISO/IEC 27001 certified" },
+  { src: "/certs/iso22301.png", alt: "ISO 22301 certified" },
+  { src: "/certs/iso27017.png", alt: "ISO/IEC 27017 certified" },
+  { src: "/certs/iso27701.png", alt: "ISO/IEC 27701 certified" },
+];
+
+const COLUMNS =CONSULTANTS_ENABLED ? [CLIENTS, CONSULTANTS] : [CLIENTS];
 
 // ponytail: the mockup's footer also links Terms of engagement, Privacy notice and Sub-processors.
 // None of those documents exists, and a link to an empty legal page is worse than no link — add
@@ -53,6 +63,13 @@ export function SiteFooter() {
               ? "Remote governance, risk and compliance practitioners, placed with organisations worldwide. The talent network of grcmentor.ai."
               : "Scoped governance, risk and compliance services — assessments, policies, testing and programmes — delivered remotely within your working hours."}
           </p>
+          <ul className="mt-6 flex flex-wrap items-center gap-4">
+            {CERTS.map((c) => (
+              <li key={c.src}>
+                <Image src={c.src} alt={c.alt} width={56} height={56} className="invert opacity-80" />
+              </li>
+            ))}
+          </ul>
         </div>
 
         {COLUMNS.map((col) => (

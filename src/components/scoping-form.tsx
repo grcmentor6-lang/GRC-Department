@@ -14,7 +14,7 @@ const FRAMEWORKS = [
   "SOC 2",
   "ISO 27001 / 27701",
   "GDPR / DPDPA / CCPA",
-  "PCI DSS 4.0",
+  "PCI DSS 4.0.1",
   "HIPAA / HITRUST",
   "ISO 42001 / EU AI Act",
   "NIST CSF / CIS Controls",

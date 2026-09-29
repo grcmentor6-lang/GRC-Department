@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { StructuredData } from "@/components/structured-data";
 import { getCatalogue } from "@/lib/catalogue";
 import { getDirectoryPreview, type ConsultantCard } from "@/lib/consultants";
 import { CONSULTANTS_ENABLED, PORTAL_ENABLED } from "@/lib/flags";
@@ -12,7 +13,7 @@ const FRAMEWORKS = [
   "ISO 42001",
   "GDPR",
   "DPDPA",
-  "PCI DSS 4.0",
+  "PCI DSS 4.0.1",
   "HIPAA",
   "HITRUST",
   "NIST CSF",
@@ -122,6 +123,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <StructuredData categories={categories} faqs={FAQ} />
       <SiteHeader />
       <main>
         {/* Hero */}
