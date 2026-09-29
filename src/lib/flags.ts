@@ -19,5 +19,13 @@ export const CONSULTANTS_ENABLED = process.env.NEXT_PUBLIC_CONSULTANTS_ENABLED =
  */
 export const PORTAL_ENABLED = process.env.NEXT_PUBLIC_PORTAL_ENABLED === "1";
 
+/**
+ * TAWK_ID — the tawk.to live-chat widget, as "<propertyId>/<widgetId>" from its embed code.
+ * Unset means no widget and no third-party script at all, which is what local development and
+ * any unconfigured deploy should get. It is a public identifier, not a secret: it ships in the
+ * page source on every site that uses it.
+ */
+export const TAWK_ID = (process.env.NEXT_PUBLIC_TAWK_ID ?? "").trim();
+
 /** Public origin, for absolute URLs in metadata. */
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://grcdepartment.com").replace(/\/$/, "");

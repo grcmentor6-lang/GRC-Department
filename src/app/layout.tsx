@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { LiveChat } from "@/components/live-chat";
 import { SITE_URL } from "@/lib/flags";
 import "./globals.css";
 
@@ -36,7 +37,10 @@ export default function RootLayout({
     // root, and a variable set only on <body> is undefined there — the page silently falls back to
     // the system font (which is what the mockup's typeface had been doing all along).
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <LiveChat />
+      </body>
     </html>
   );
 }
