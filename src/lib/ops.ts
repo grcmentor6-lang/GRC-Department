@@ -39,6 +39,14 @@ export interface OpsRequest {
   status: string;
   /** What this request can become from here. Empty means it is settled. */
   allowed?: string[];
+  /** The engagement it became, once a proposal has gone out. One request becomes one. */
+  engagement?: {
+    ref: string;
+    name: string;
+    stage: string;
+    channel: string | null;
+    started_on: string | null;
+  } | null;
   contact_name: string | null;
   contact_email: string;
   org: string | null;
@@ -78,6 +86,16 @@ export const opsQueue = (status?: string) =>
 
 export const opsRequest = (id: string) =>
   apiGet<OpsRequest & { thread: OpsNote[] }>(`/gd/admin/requests/${id}`, { ...auth(), cache: "no-store" });
+
+export const opsPropose = (
+  id: string,
+  body: { name: string; summary: string; slug?: string; starts_on?: string; due_on?: string },
+) =>
+  apiPost<{ ref: string; id: string; channel: string | null; status: string }>(
+    `/gd/admin/requests/${id}/engagement`,
+    body,
+    { token: getOpsToken() ?? undefined },
+  );
 
 export const opsSetStatus = (id: string, status: string, reason?: string) =>
   apiPost<{ status: string; allowed: string[] }>(

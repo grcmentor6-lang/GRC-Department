@@ -8,6 +8,7 @@ import {
   opsQueue,
   opsReply,
   opsRequest,
+  opsPropose,
   opsSetStatus,
   setOpsToken,
   type OpsNote,
@@ -127,6 +128,10 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
+  const [proposing, setProposing] = useState(false);
+  const [pName, setPName] = useState("");
+  const [pSummary, setPSummary] = useState("");
+  const [pSlug, setPSlug] = useState("");
 
   const load = useCallback(async () => {
     setRow(await opsRequest(id));
@@ -153,6 +158,25 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
       // The backend refuses a move that does not exist from here. Saying why beats a button
       // that silently did nothing, which is what the four always-enabled buttons did.
       setProblem(err instanceof ApiError ? err.message : "That change could not be saved.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const propose = async () => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      await opsPropose(id, {
+        name: pName.trim(),
+        summary: pSummary.trim(),
+        slug: pSlug.trim() || undefined,
+      });
+      setProposing(false);
+      await load();
+      await onChanged();
+    } catch (err) {
+      setProblem(err instanceof ApiError ? err.message : "The proposal could not be sent.");
     } finally {
       setBusy(false);
     }
@@ -223,6 +247,86 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
             <p className="text-sm font-medium text-ink">What they wrote</p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-3">{row.notes}</p>
           </div>
+        )}
+
+        {row.engagement ? (
+          <div className="mt-4 rounded-lg border border-line-strong bg-sunken p-4">
+            <p className="text-sm font-medium text-ink">
+              {row.engagement.ref} · {row.engagement.name}
+            </p>
+            <p className="mt-1 text-sm text-ink-4">
+              {row.engagement.stage}
+              {row.engagement.channel ? ` · #${row.engagement.channel}` : ""}
+              {row.engagement.started_on ? ` · from ${row.engagement.started_on}` : ""}
+            </p>
+            <p className="mt-2 text-xs text-ink-5">
+              One request becomes one engagement. To propose something different, withdraw this one first.
+            </p>
+          </div>
+        ) : row.org ? (
+          <div className="mt-4 rounded-lg border border-line-strong bg-sunken p-4">
+            {proposing ? (
+              <>
+                <p className="text-sm font-medium text-ink">Send a proposal</p>
+                <p className="mt-1 text-xs text-ink-5">
+                  This posts a card to their account channel. Accepting it opens the engagement and
+                  its channel — we do not open it for them.
+                </p>
+                <input
+                  id="prop-name"
+                  value={pName}
+                  onChange={(e) => setPName(e.target.value)}
+                  placeholder="SOC 2 Type II readiness"
+                  className="focus-ring mt-3 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint"
+                />
+                <textarea
+                  id="prop-summary"
+                  rows={3}
+                  value={pSummary}
+                  onChange={(e) => setPSummary(e.target.value)}
+                  placeholder="What the work covers and what they get, in two or three sentences."
+                  className="focus-ring mt-2 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint"
+                />
+                <input
+                  id="prop-slug"
+                  value={pSlug}
+                  onChange={(e) => setPSlug(e.target.value)}
+                  placeholder="soc2 — the short form in the channel name"
+                  className="focus-ring mt-2 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={busy || pName.trim().length < 3 || pSummary.trim().length < 10}
+                    onClick={() => void propose()}
+                    className="focus-ring rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+                  >
+                    Send proposal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProposing(false)}
+                    className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setProposing(true)}
+                className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule"
+              >
+                Send a proposal
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-ink-5">
+            No client account behind this request, so there is nothing to open an engagement
+            against. Ask them to create one, or reply by email.
+          </p>
         )}
 
         <div className="mt-5 border-t border-line pt-4">
