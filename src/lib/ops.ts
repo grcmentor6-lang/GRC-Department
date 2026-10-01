@@ -37,6 +37,8 @@ export interface OpsRequest {
   reference: string;
   kind: string;
   status: string;
+  /** What this request can become from here. Empty means it is settled. */
+  allowed?: string[];
   contact_name: string | null;
   contact_email: string;
   org: string | null;
@@ -77,8 +79,12 @@ export const opsQueue = (status?: string) =>
 export const opsRequest = (id: string) =>
   apiGet<OpsRequest & { thread: OpsNote[] }>(`/gd/admin/requests/${id}`, { ...auth(), cache: "no-store" });
 
-export const opsSetStatus = (id: string, status: string) =>
-  apiPost<{ status: string }>(`/gd/admin/requests/${id}/status`, { status }, { token: getOpsToken() ?? undefined });
+export const opsSetStatus = (id: string, status: string, reason?: string) =>
+  apiPost<{ status: string; allowed: string[] }>(
+    `/gd/admin/requests/${id}/status`,
+    { status, reason: reason || null },
+    { token: getOpsToken() ?? undefined },
+  );
 
 export const opsReply = (id: string, body: string, internal: boolean) =>
   apiPost<{ id: string }>(`/gd/admin/requests/${id}/reply`, { body, internal }, { token: getOpsToken() ?? undefined });

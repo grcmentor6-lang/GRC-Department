@@ -31,6 +31,14 @@ const STATUS_LABEL: Record<string, string> = {
   withdrawn: "Withdrawn by client",
 };
 
+// What the button says, which is the action rather than the state it lands in: "Start
+// reviewing" is a thing a person does, "Reviewing" is a label on a row.
+const MOVE_LABEL: Record<string, string> = {
+  reviewing: "Start reviewing",
+  accepted: "Mark accepted",
+  declined: "Decline",
+};
+
 const STATUS_TONE: Record<string, string> = {
   new: "border-accent bg-accent-tint text-accent",
   reviewing: "border-line-strong bg-sunken text-ink-3",
@@ -116,6 +124,9 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
   const [body, setBody] = useState("");
   const [internal, setInternal] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [declining, setDeclining] = useState(false);
+  const [reason, setReason] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setRow(await opsRequest(id));
@@ -129,12 +140,22 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
 
   if (!row) return <p className="p-6 text-sm text-ink-5">Loading…</p>;
 
-  const move = async (status: string) => {
+  const move = async (status: string, reason?: string) => {
     setBusy(true);
-    await opsSetStatus(id, status).catch(() => undefined);
-    await load();
-    await onChanged();
-    setBusy(false);
+    setProblem(null);
+    try {
+      await opsSetStatus(id, status, reason);
+      setDeclining(false);
+      setReason("");
+      await load();
+      await onChanged();
+    } catch (err) {
+      // The backend refuses a move that does not exist from here. Saying why beats a button
+      // that silently did nothing, which is what the four always-enabled buttons did.
+      setProblem(err instanceof ApiError ? err.message : "That change could not be saved.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const send = async (e: React.FormEvent) => {
@@ -204,18 +225,79 @@ function Detail({ id, onChanged }: { id: string; onChanged: () => Promise<void> 
           </div>
         )}
 
-        <div className="mt-5 flex flex-wrap gap-2 border-t border-line pt-4">
-          {["reviewing", "proposal", "accepted", "declined"].map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={busy || row.status === s}
-              onClick={() => void move(s)}
-              className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-40"
-            >
-              {STATUS_LABEL[s]}
-            </button>
-          ))}
+        <div className="mt-5 border-t border-line pt-4">
+          {(row.allowed ?? []).length === 0 ? (
+            <p className="text-sm text-ink-5">
+              This request is settled. {row.status === "accepted"
+                ? "The engagement has started."
+                : "Nothing further happens to it here."}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              {(row.allowed ?? []).map((s) =>
+                s === "declined" ? (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setDeclining(true)}
+                    className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-40"
+                  >
+                    Decline
+                  </button>
+                ) : (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void move(s)}
+                    className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2 hover:border-rule disabled:opacity-40"
+                  >
+                    {MOVE_LABEL[s] ?? STATUS_LABEL[s] ?? s}
+                  </button>
+                ),
+              )}
+              <span className="text-xs text-ink-5">The client is told in Slack.</span>
+            </div>
+          )}
+
+          {declining && (
+            <div className="mt-4 rounded-lg border border-line-strong bg-sunken p-4">
+              <label htmlFor="decline-reason" className="text-sm font-medium text-ink">
+                Why are we declining? This is sent to them.
+              </label>
+              <textarea
+                id="decline-reason"
+                rows={3}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Not work we can do well right now — we have no ISO 42001 lead free before March."
+                className="focus-ring mt-2 w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy || !reason.trim()}
+                  onClick={() => void move("declined", reason)}
+                  className="focus-ring rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+                >
+                  Decline and tell them
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeclining(false)}
+                  className="focus-ring rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-2"
+                >
+                  Cancel
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-ink-5">
+                A decline with no reason reads as a form letter, and they write back to ask why.
+              </p>
+            </div>
+          )}
+
+          {problem && <p className="mt-3 text-sm text-ink-3">{problem}</p>}
         </div>
       </div>
 
