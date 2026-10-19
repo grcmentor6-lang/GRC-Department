@@ -37,13 +37,21 @@ const CONSULTANTS = {
 };
 
 // Artwork is white-on-transparent (lifted from vaptfix.ai's dark footer), hence `invert` below.
+// ?v=<n> is a cache key, not a parameter anything reads. next/image serves optimised output from
+// /_next/image?url=<source> with a one-year immutable cache, keyed on that source path — so
+// three badges kept their old grey-backed optimisation at the edge and in every browser long
+// after the files themselves were fixed, and no redeploy could clear it. Bump this whenever a
+// badge's pixels change. next.config.ts allows any query on /certs/**, so a bump needs no
+// config change — without that allowance next/image refuses the URL and the build fails.
+const CERT_VERSION = 2;
+
 const CERTS = [
   { src: "/certs/soc2.png", alt: "AICPA SOC for Cloud Services certified" },
   { src: "/certs/iso27001.png", alt: "ISO/IEC 27001 certified" },
   { src: "/certs/iso22301.png", alt: "ISO 22301 certified" },
   { src: "/certs/iso27017.png", alt: "ISO/IEC 27017 certified" },
   { src: "/certs/iso27701.png", alt: "ISO/IEC 27701 certified" },
-];
+].map((c) => ({ ...c, src: `${c.src}?v=${CERT_VERSION}` }));
 
 const COLUMNS =CONSULTANTS_ENABLED ? [CLIENTS, CONSULTANTS] : [CLIENTS];
 
