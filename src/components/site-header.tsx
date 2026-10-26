@@ -189,14 +189,27 @@ export function SiteHeader() {
               {CREATE_ACCOUNT.label}
             </Link>
             )}
+            {/* The brief is the old product: describe an obligation, a lead scopes it, we quote
+                by the hour. The new one is a department you install. Both work today, so both
+                are here — but only one of them is the thing being sold, and it is the filled
+                button. The brief goes when the old backend does. */}
             <Link
               href="/brief"
               aria-current={owns(pathname, "/brief") ? "page" : undefined}
-              className={`focus-ring rounded-lg bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-dark ${
-                owns(pathname, "/brief") ? "ring-2 ring-accent ring-offset-2 ring-offset-paper" : ""
+              className={`focus-ring rounded-lg px-3.5 py-2 font-semibold text-ink-3 hover:text-ink ${
+                owns(pathname, "/brief") ? "text-ink underline underline-offset-4" : ""
               }`}
             >
               Submit a brief
+            </Link>
+            <Link
+              href="/signup"
+              aria-current={owns(pathname, "/signup") ? "page" : undefined}
+              className={`focus-ring rounded-lg bg-accent px-3.5 py-2 font-semibold text-white hover:bg-accent-dark ${
+                owns(pathname, "/signup") ? "ring-2 ring-accent ring-offset-2 ring-offset-paper" : ""
+              }`}
+            >
+              Get started
             </Link>
 
             <details className="relative lg:hidden">

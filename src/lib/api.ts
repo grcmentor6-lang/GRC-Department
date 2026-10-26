@@ -10,6 +10,19 @@
 export const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
+/**
+ * The rebuilt GRC Department backend — a separate service from the one BASE_URL points at.
+ *
+ * Two backends for a while on purpose. The service catalogue and the engagement brief are the
+ * old product and still live on GRC Mentor's API; sign-up and install are the new one. Pointing
+ * everything at the new service would take the catalogue down, and pointing the sign-up at the
+ * old one would reach routes it does not have. The second variable goes away when the old
+ * product does.
+ */
+export const DEPT_API_URL = (
+  process.env.NEXT_PUBLIC_DEPT_API_URL ?? "http://localhost:8010"
+).replace(/\/$/, "");
+
 export class ApiError extends Error {
   status: number;
   body: unknown;
