@@ -119,6 +119,8 @@ export function SignupForm() {
   }
 
   if (created?.install_url) {
+    // Empty during the server render; the button is only ever pressed in a browser.
+    const origin = typeof window === "undefined" ? "" : window.location.origin;
     return (
       <Panel title="One step left: add it to your Slack.">
         <p>
@@ -137,8 +139,12 @@ export function SignupForm() {
           Not a Slack admin? Install anyway — Slack sends your administrator a request to
           approve, and we’ll pick it up from there.
         </p>
+        {/* Where to come back to. The backend checks it against its own allowlist and then
+            carries it inside the signed OAuth state, so this is a convenience rather than
+            something to trust — but it is what lets staging and production share one backend
+            without a variable deciding which site is real. */}
         <a
-          href={`${DEPT_API_URL}${created.install_url}`}
+          href={`${DEPT_API_URL}${created.install_url}&return_to=${encodeURIComponent(origin)}`}
           className="mt-8 inline-flex items-center justify-center rounded-lg bg-accent px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
         >
           Add to Slack
